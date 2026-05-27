@@ -1,0 +1,6 @@
+Sprint 1:
+    1. Locomotion - James
+    2. Shooting - Lisa
+    3. Pathfinder - James
+    4. Intake - Rafay
+    5. Infrastructure - Vidur
