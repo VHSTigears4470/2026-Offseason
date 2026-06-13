@@ -1,4 +1,4 @@
-package frc.robot.Constants;
+package frc.robot.constants;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -10,8 +10,8 @@ public final class Drive {
         public static final double MAX_METERS_PER_SECOND = 4.46;
         public static final double MAX_ANGULAR_SPEED = 2 * Math.PI; //radians per second
 
-        public static final double WHEEL_BASE = Units.inchesToMeters(27.5);
-        public static final double TRACK_WIDTH = Units.inchesToMeters(27.5);
+        public static final double WHEEL_BASE = Units.inchesToMeters(27.5);  //change?
+        public static final double TRACK_WIDTH = Units.inchesToMeters(27.5); //change?
 
         public static final SwerveDriveKinematics DRIVE_KINEMATICS = new SwerveDriveKinematics(
             new Translation2d(WHEEL_BASE / 2, TRACK_WIDTH / 2),    //Front Left

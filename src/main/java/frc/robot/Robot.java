@@ -29,7 +29,7 @@ public class Robot extends LoggedRobot  {
    * initialization code.
    */
   public Robot() {
-    Logger.recordMetadata("ProjectName", "BigJoe"); // Set a metadata value
+    Logger.recordMetadata("ProjectName", "2026-Offseason"); // Set a metadata value
     Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
     if (isReal()) { 

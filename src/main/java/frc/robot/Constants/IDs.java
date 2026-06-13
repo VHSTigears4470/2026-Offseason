@@ -1,4 +1,4 @@
-package frc.robot.Constants;
+package frc.robot.constants;
 
 public class IDs {
     public static final class DriveConstants {
@@ -13,22 +13,5 @@ public class IDs {
         public static final int BR_TURN_ID = 10;  //18
 
         public static final int PIGEON_ID = 8;   //10
-    }
-
-    public static final class ClimbConstants {
-        public static final int CLIMB_ID = 22;  //27
-        public static final int CLIMB_LIMIT_ID = 0;
-    }
-
-     public static final class IntakeConstants {
-        public static final int INTAKE_ID = 18;  //5
-        public static final int ROTATE_ID = 25; //6
-    }
-
-    public static final class ShooterConstants {
-        public static final int FLYWHEEL_RIGHT_ID = 19; //21
-        public static final int FLYWHEEL_LEFT_ID = 20;
-        public static final int FEEDER_ID = 23;
-        public static final int HOPPER_ID = 24;
     }
 }

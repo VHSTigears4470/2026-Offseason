@@ -17,14 +17,11 @@ public class PIDMotor extends SubsystemBase {
   }
 
   @Override public void periodic() {
-    if (io instanceof PIDMotorIOSim) {
-      ((PIDMotorIOSim) io).periodic();
-    }
     io.updateInputs(inputs);
   }
 
   public void setSetpoint(double setpoint, double FF) {
-    io.setSetpoint(setpoint, ControlType.kMAXMotionPositionControl,FF);
+    io.setSetpoint(setpoint, ControlType.kMAXMotionPositionControl, FF);
     Logger.recordOutput("PIDMotor/Setpoint", setpoint);
   }
 

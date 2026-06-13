@@ -8,7 +8,6 @@ public interface PIDMotorIO {
     @AutoLog
     public class PIDMotorIOInputs {
         public double RPM = 0.0;
-        public double rotation = 0.0;
         //add the rest
     }
 

@@ -5,16 +5,19 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
-public class SwerveModuleIOSparkFlex implements SwerveModuleIO {
+public class SwerveModuleIONEO implements SwerveModuleIO {
 
-  private SparkMax driveMotor = null;
+  private SparkFlex driveMotor = null;
   private SparkMax turnMotor = null;
 
   private RelativeEncoder driveEncoder = null;
@@ -25,8 +28,8 @@ public class SwerveModuleIOSparkFlex implements SwerveModuleIO {
 
   private double chassisAngularOffset = 0;
 
-  public SwerveModuleIOSparkFlex(int driveID, int turnID, double offset, SparkFlexConfig driveConfig, SparkFlexConfig turnConfig) {
-    driveMotor = new SparkMax(driveID, MotorType.kBrushless);
+  public SwerveModuleIONEO(int driveID, int turnID, double offset, SparkFlexConfig driveConfig, SparkMaxConfig turnConfig) {
+    driveMotor = new SparkFlex(driveID, MotorType.kBrushless);
     turnMotor = new SparkMax(turnID, MotorType.kBrushless);
 
     driveEncoder = driveMotor.getEncoder();
