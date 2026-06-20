@@ -1,16 +1,18 @@
 package frc.robot.subsystems;
 
-import java.util.Optional;
-
 import org.littletonrobotics.junction.Logger;
+import org.opencv.core.Mat;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -22,11 +24,11 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.components.SwerveModule;
 import frc.robot.components.SwerveModuleIONEO;
-import frc.robot.constants.Configs;
-import frc.robot.constants.Drive;
-import frc.robot.constants.Drive.Constants.MotorLocation;
-import frc.robot.constants.IDs;
-import frc.robot.constants.Operating;
+import frc.robot.Constants.Configs;
+import frc.robot.Constants.Drive;
+import frc.robot.Constants.Drive.Constants.MotorLocation;
+import frc.robot.Constants.IDs;
+import frc.robot.Constants.Operating;
 
 public class DriveSubsystem extends SubsystemBase{
     private SwerveModule frontLeft = null;
@@ -42,6 +44,11 @@ public class DriveSubsystem extends SubsystemBase{
     private double lastMatchLog = 0.0;
     private boolean lastTeleopEnabled = false;
     private boolean lastAutonomousEnabled = false;
+
+    //No clue about these values
+    private final PIDController xController = new PIDController(10.0, 0.0, 0.0);
+    private final PIDController yController = new PIDController(10.0, 0.0, 0.0);
+    private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
     public DriveSubsystem() {
             frontLeft = new SwerveModule(
@@ -78,6 +85,8 @@ public class DriveSubsystem extends SubsystemBase{
             Drive.Constants.DRIVE_KINEMATICS,
             getRotation2d(),
             getSwerveModulePosition());
+
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
         
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
     }
@@ -103,8 +112,30 @@ public class DriveSubsystem extends SubsystemBase{
         backRight.setDesiredState(swerveModuleStates[3]);
     }
 
+    public void followTrajectory(SwerveSample sample) {
+        Pose2d pose = getOdometry(); //Change to getPose() after implementing limelight
+
+        ChassisSpeeds speeds = new ChassisSpeeds(
+            sample.vx + xController.calculate(pose.getX(), sample.x),
+            sample.vy + yController.calculate(pose.getY(), sample.y),
+            sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
+        );
+
+        driveFieldRelative(speeds);
+    }
+
     public void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {
         ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
+        SwerveModuleState[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleStates(targetSpeeds);
+        frontLeft.setDesiredState(targetStates[0]);
+        frontRight.setDesiredState(targetStates[1]);
+        backLeft.setDesiredState(targetStates[2]);
+        backRight.setDesiredState(targetStates[3]);
+    }
+
+    //Verify
+    public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {
+        ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(fieldRelativeSpeeds, 0.02);
         SwerveModuleState[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleStates(targetSpeeds);
         frontLeft.setDesiredState(targetStates[0]);
         frontRight.setDesiredState(targetStates[1]);
@@ -132,7 +163,7 @@ public class DriveSubsystem extends SubsystemBase{
 
     public Rotation2d getRotation2d() {
         if(Operating.Constants.USING_GYRO) { 
-            return new Rotation2d(gyro.getYaw().getValue()); //Verify
+            return new Rotation2d(gyro.getYaw().getValue()); //Verify; might have to invert
         }
         else {
             return new Rotation2d(0);
@@ -143,7 +174,6 @@ public class DriveSubsystem extends SubsystemBase{
         return odometry.getPoseMeters();
     }
 
-    //Verify
     public ChassisSpeeds getRobotRelativeSpeeds() {
         return Drive.Constants.DRIVE_KINEMATICS.toChassisSpeeds(
             frontLeft.getState(),
