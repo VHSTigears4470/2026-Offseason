@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
-import org.opencv.core.Mat;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -12,7 +11,9 @@ import choreo.trajectory.SwerveSample;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -20,10 +21,12 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.components.SwerveModule;
 import frc.robot.components.SwerveModuleIONEO;
+import frc.robot.LimelightHelpers;
 import frc.robot.Constants.Configs;
 import frc.robot.Constants.Drive;
 import frc.robot.Constants.Drive.Constants.MotorLocation;
@@ -39,7 +42,8 @@ public class DriveSubsystem extends SubsystemBase{
     private SwerveModuleState desiredStates[] = {new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState()};
 
     private final Pigeon2 gyro = Operating.Constants.USING_GYRO ? new Pigeon2(IDs.DriveConstants.PIGEON_ID) : null;
-    SwerveDriveOdometry odometry = null;
+    private SwerveDrivePoseEstimator poseEstimator = null;
+    private SwerveDriveOdometry odometry = null;
         
     private double lastMatchLog = 0.0;
     private boolean lastTeleopEnabled = false;
@@ -86,6 +90,9 @@ public class DriveSubsystem extends SubsystemBase{
             getRotation2d(),
             getSwerveModulePosition());
 
+        poseEstimator = new SwerveDrivePoseEstimator(Drive.Constants.DRIVE_KINEMATICS, getRotation2d(), getSwerveModulePosition(), new Pose2d(), 
+            VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5)), VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30)));
+
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
@@ -113,7 +120,7 @@ public class DriveSubsystem extends SubsystemBase{
     }
 
     public void followTrajectory(SwerveSample sample) {
-        Pose2d pose = getOdometry(); //Change to getPose() after implementing limelight
+        Pose2d pose = getEstimatedPosition(); //add conditional for operating constants
 
         ChassisSpeeds speeds = new ChassisSpeeds(
             sample.vx + xController.calculate(pose.getX(), sample.x),
@@ -121,21 +128,11 @@ public class DriveSubsystem extends SubsystemBase{
             sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
         );
 
-        driveFieldRelative(speeds);
+        driveRelative(speeds);
     }
 
-    public void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {
-        ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
-        SwerveModuleState[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleStates(targetSpeeds);
-        frontLeft.setDesiredState(targetStates[0]);
-        frontRight.setDesiredState(targetStates[1]);
-        backLeft.setDesiredState(targetStates[2]);
-        backRight.setDesiredState(targetStates[3]);
-    }
-
-    //Verify
-    public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {
-        ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(fieldRelativeSpeeds, 0.02);
+    public void driveRelative(ChassisSpeeds relativeSpeeds) {
+        ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(relativeSpeeds, 0.02);
         SwerveModuleState[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleStates(targetSpeeds);
         frontLeft.setDesiredState(targetStates[0]);
         frontRight.setDesiredState(targetStates[1]);
@@ -172,6 +169,10 @@ public class DriveSubsystem extends SubsystemBase{
 
     public Pose2d getOdometry() {
         return odometry.getPoseMeters();
+    }
+
+    public Pose2d getEstimatedPosition(){
+        return poseEstimator.getEstimatedPosition();
     }
 
     public ChassisSpeeds getRobotRelativeSpeeds() {
@@ -213,6 +214,11 @@ public class DriveSubsystem extends SubsystemBase{
 
     @Override
     public void periodic() {
+        Logger.recordOutput("Drive/Pose", poseEstimator.getEstimatedPosition());
+        Logger.recordOutput("Drive/Pose/X", poseEstimator.getEstimatedPosition().getX());
+        Logger.recordOutput("Drive/Pose/Y", poseEstimator.getEstimatedPosition().getY());
+        Logger.recordOutput("Drive/Pose/Rotation", poseEstimator.getEstimatedPosition().getRotation().getDegrees());
+        
         if (Operating.Constants.USING_GYRO) {
             Logger.recordOutput("Drive/Gyro/Yaw", gyro.getYaw().getValue());
             Logger.recordOutput("Drive/Gyro/Pitch", gyro.getPitch().getValue());
@@ -242,5 +248,42 @@ public class DriveSubsystem extends SubsystemBase{
         }
 
         odometry.update(getRotation2d(), getSwerveModulePosition());
+        poseEstimator.updateWithTime(Timer.getFPGATimestamp(), getRotation2d(), getSwerveModulePosition());
+
+        //rename limelight
+        boolean useMegaTag2 = true; //set to false to use MegaTag1
+        boolean doRejectUpdate = false;
+        if(useMegaTag2 == false) {
+            LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+            if(mt1.tagCount == 1 && mt1.rawFiducials.length == 1) {
+                if(mt1.rawFiducials[0].ambiguity > .7) {
+                    doRejectUpdate = true;
+                }   
+                if(mt1.rawFiducials[0].distToCamera > 3) {
+                    doRejectUpdate = true;
+                }
+            }
+            if(mt1.tagCount == 0) {
+                doRejectUpdate = true;
+            }
+            if(!doRejectUpdate) {
+                poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.5,.5,9999999));
+                poseEstimator.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);
+            }
+        }
+        else if (useMegaTag2 == true) {
+            LimelightHelpers.SetRobotOrientation("limelight", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+            LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            if(Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) {// if our angular velocity is greater than 720 degrees per second, ignore vision updates
+                doRejectUpdate = true;
+            }
+            if(mt2.tagCount == 0) {
+                doRejectUpdate = true;
+            }
+            if(!doRejectUpdate) {
+                poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+                poseEstimator.addVisionMeasurement(mt2.pose, mt2.timestampSeconds);
+            }
+        }
     }
 }
