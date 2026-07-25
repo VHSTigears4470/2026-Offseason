@@ -12,7 +12,9 @@ import choreo.trajectory.SwerveSample;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -24,6 +26,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.components.SwerveModule;
 import frc.robot.components.SwerveModuleIONEO;
+import frc.robot.LimelightHelpers;
 import frc.robot.Constants.Configs;
 import frc.robot.Constants.Drive;
 import frc.robot.Constants.Drive.Constants.MotorLocation;
@@ -40,7 +43,7 @@ public class DriveSubsystem extends SubsystemBase{
 
     private final Pigeon2 gyro = Operating.Constants.USING_GYRO ? new Pigeon2(IDs.DriveConstants.PIGEON_ID) : null;
     SwerveDriveOdometry odometry = null;
-        
+    SwerveDrivePoseEstimator poseEstimator = null;
     private double lastMatchLog = 0.0;
     private boolean lastTeleopEnabled = false;
     private boolean lastAutonomousEnabled = false;
@@ -86,6 +89,11 @@ public class DriveSubsystem extends SubsystemBase{
             getRotation2d(),
             getSwerveModulePosition());
 
+        poseEstimator = new SwerveDrivePoseEstimator(Drive.Constants.DRIVE_KINEMATICS,
+            getRotation2d(), 
+            getSwerveModulePosition(), 
+            new Pose2d()
+        ); // todo: standard deviations? idrk how to do ill ask nathan
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
@@ -188,6 +196,45 @@ public class DriveSubsystem extends SubsystemBase{
             getRotation2d(),
             getSwerveModulePosition(),
             pose);
+    }
+
+    public void updateOdometry(Pose2d pose) {
+        poseEstimator.update(getRotation2d(), new SwerveModulePosition[] {
+            frontLeft.getPosition(),
+            frontRight.getPosition(),
+            backLeft.getPosition(),
+            backRight.getPosition()
+        });
+
+        boolean rejectUpdates = false; 
+        // mt2 = megatag 2
+        LimelightHelpers.SetRobotOrientation("limelight", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+        LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight"); // TODO: set proper camera names lol
+        LimelightHelpers.RawFiducial[] fiducials = mt2 != null ? mt2.rawFiducials : null;
+
+        double angularVelocity = gyro.getAngularVelocityZWorld().getValueAsDouble();
+        
+        if (
+            mt2 == null
+            || fiducials == null 
+            || fiducials.length == 0
+            || (mt2.tagCount == 1 && fiducials[0].ambiguity > 0.7)
+            || fiducials[0].distToCamera > 4
+        ) {
+            rejectUpdates = true;
+        }
+
+        if (Math.abs(angularVelocity) > 720 || mt2.tagCount == 0) {
+            rejectUpdates = true;
+        }
+
+        if (!rejectUpdates) {
+            poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
+            poseEstimator.addVisionMeasurement(
+                mt2.pose,
+                mt2.timestampSeconds    
+            );
+        }
     }
 
     public void resetEncoders() {

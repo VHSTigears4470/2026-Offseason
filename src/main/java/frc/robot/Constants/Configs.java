@@ -17,12 +17,13 @@ public final class Configs {
         static {
             //Module constants used to calculate conversion factors and feed forward gain.
             double DRIVING_FACTOR = Drive.ModuleConstants.WHEEL_DIAMETER * Math.PI
-                / Drive.ModuleConstants.DRIVE_MOTOR_REDUCTION;
+                / 3.56;
             double FF_VELOCITY = 1 / Drive.ModuleConstants.DRIVE_WHEEL_FREE_RPS;
             double TURNING_FACTOR = 2 * Math.PI;
 
             TURNING_CONFIG
                 .idleMode(IdleMode.kBrake)
+                
                 .smartCurrentLimit(20);
             TURNING_CONFIG.absoluteEncoder
                 .inverted(true)
@@ -38,7 +39,7 @@ public final class Configs {
             FL_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(false);
+                .inverted(true);
             FL_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -51,7 +52,7 @@ public final class Configs {
             FR_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(false);
+                .inverted(true);
             FR_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -63,8 +64,7 @@ public final class Configs {
 
             BL_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(50)
-                .inverted(false);
+                .smartCurrentLimit(50);
             BL_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -77,7 +77,7 @@ public final class Configs {
             BR_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(false);
+                .inverted(true);
             BR_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);

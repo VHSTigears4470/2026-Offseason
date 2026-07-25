@@ -31,6 +31,8 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
   public SwerveModuleIONEO(int driveID, int turnID, double offset, SparkFlexConfig driveConfig, SparkMaxConfig turnConfig) {
     driveMotor = new SparkFlex(driveID, MotorType.kBrushless);
     turnMotor = new SparkMax(turnID, MotorType.kBrushless);
+    
+    System.out.println(driveMotor.configAccessor.getInverted());
 
     driveEncoder = driveMotor.getEncoder();
     turnEncoder = turnMotor.getAbsoluteEncoder();
