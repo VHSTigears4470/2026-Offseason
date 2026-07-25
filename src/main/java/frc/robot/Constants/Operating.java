@@ -9,5 +9,6 @@ public class Operating {
         public static final boolean USING_CLIMB    = false;
         public static final boolean USING_INTAKE   = false;
         public static final boolean USING_OPERATOR = false;
+        public static final boolean USING_LIMELIGHT = false;
     }
 }

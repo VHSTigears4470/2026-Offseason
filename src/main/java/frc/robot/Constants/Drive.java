@@ -10,8 +10,8 @@ public final class Drive {
         public static final double MAX_METERS_PER_SECOND = 4.46;
         public static final double MAX_ANGULAR_SPEED = 2 * Math.PI; //radians per second
 
-        public static final double WHEEL_BASE = Units.inchesToMeters(27.5);  //change?
-        public static final double TRACK_WIDTH = Units.inchesToMeters(27.5); //change?
+        public static final double WHEEL_BASE = Units.inchesToMeters(27.5);  //update?
+        public static final double TRACK_WIDTH = Units.inchesToMeters(27.5); //update?
 
         public static final SwerveDriveKinematics DRIVE_KINEMATICS = new SwerveDriveKinematics(
             new Translation2d(WHEEL_BASE / 2, TRACK_WIDTH / 2),    //Front Left
@@ -42,6 +42,7 @@ public final class Drive {
             }
         }
 
+        //update?
         public static final PIDController ROTATION_CONTROLLER = getRotationController();
         private static final PIDController getRotationController() {
             PIDController controller = new PIDController(2.5, 0.0, 0.0); 

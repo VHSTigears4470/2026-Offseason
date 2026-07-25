@@ -23,9 +23,10 @@ public class RobotContainer {
 
   public RobotContainer() {
     initSubystems();
-     autoFactory = new AutoFactory(
-            driveSub::getOdometry, // A function that returns the current robot pose - might have to implement limelignt first
-            driveSub::resetOdometry, // A function that resets the current robot pose to the provided Pose2d
+     autoFactory = new AutoFactory( 
+            //Switch to odometry methods if needed?
+            driveSub::getEstimatedPosition, // A function that returns the current robot pose - might have to implement limelight first
+            driveSub::resetPose, // A function that resets the current robot pose to the provided Pose2d     
             driveSub::followTrajectory, // The drive subsystem trajectory follower 
             true, // If alliance flipping should be enabled 
             driveSub // The drive subsystem
