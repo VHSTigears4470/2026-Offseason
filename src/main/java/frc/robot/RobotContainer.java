@@ -7,7 +7,12 @@ package frc.robot;
 import org.littletonrobotics.junction.Logger;
 
 import choreo.auto.AutoFactory;
+import choreo.auto.AutoRoutine;
+import choreo.auto.AutoTrajectory;
+import choreo.trajectory.Trajectory;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OI;
@@ -21,8 +26,13 @@ public class RobotContainer {
 
   private final AutoFactory autoFactory;
 
+  private final AutoRoutine myTrajectoryMeter;
+
+  private final AutoRoutine myTrajectory180;
+
   public RobotContainer() {
     initSubystems();
+    if (driveSub != null) {
      autoFactory = new AutoFactory( 
             //Switch to odometry methods if needed?
             driveSub::getEstimatedPosition, // A function that returns the current robot pose - might have to implement limelight first
@@ -31,11 +41,61 @@ public class RobotContainer {
             true, // If alliance flipping should be enabled 
             driveSub // The drive subsystem
         );
-    configureBindings();
+      configureBindings();
+
+      myTrajectoryMeter = myTrajectoryMeterAuto();
+      myTrajectory180 = myTrajectory180Auto();
+    }
+    else {
+      autoFactory = null;
+      myTrajectoryMeter = null;
+      myTrajectory180 = null;
+    }
+  }
+
+  public AutoRoutine myTrajectoryMeterAuto() {
+    if (autoFactory == null) {
+      return null;
+    }
+    AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward");
+
+    AutoTrajectory trajectory = autoRoutine.trajectory("Meter");
+
+    autoRoutine.active().onTrue(
+            Commands.sequence(
+                trajectory.resetOdometry(),
+                trajectory.cmd()
+            )
+        );
+
+    return autoRoutine;
+
+  }
+
+  public AutoRoutine myTrajectory180Auto() {
+    if (autoFactory == null) {
+      return null;
+    }
+    AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward and Rotate 180");
+
+    AutoTrajectory trajectory = autoRoutine.trajectory("Rotation180");
+
+    autoRoutine.active().onTrue(
+            Commands.sequence(
+                trajectory.resetOdometry(),
+                trajectory.cmd()
+            )
+        );
+
+    return autoRoutine;
+
   }
 
   public void initSubystems() {
     if(Operating.Constants.USING_DRIVE)
+    LimelightHelpers.setPipelineIndex("limelight-one", 1);
+      LimelightHelpers.setupPortForwardingUSB(0);
+
       driveSub = new DriveSubsystem();
 
       driveSub.setDefaultCommand(new RunCommand(
@@ -61,5 +121,14 @@ public class RobotContainer {
           driveSub));
     }
 
-  private void configureBindings() {}
-}
+    public Command getAutonomousCommand() 
+    {
+      if (myTrajectoryMeter == null) { //myTrajectory180 == null) {
+        return Commands.none();
+      }
+      return myTrajectoryMeter.cmd();
+      //return myTrajectory180.cmd();    
+    }
+
+    private void configureBindings() {}
+  }

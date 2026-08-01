@@ -196,6 +196,13 @@ public class DriveSubsystem extends SubsystemBase{
         );
     }
 
+    public void resetPose(Pose2d pose) {
+        poseEstimator.resetPosition(
+            getRotation2d(),
+            getSwerveModulePositions(),
+            pose);
+    }
+
     public void resetOdometry(Pose2d pose) {
         odometry.resetPosition(
             getRotation2d(),
@@ -210,36 +217,6 @@ public class DriveSubsystem extends SubsystemBase{
             backLeft.getPosition(),
             backRight.getPosition()
         });
-
-        boolean rejectUpdates = false; 
-        // mt2 = megatag 2
-        LimelightHelpers.SetRobotOrientation("limelight", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-        LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight"); // TODO: set proper camera names lol
-        LimelightHelpers.RawFiducial[] fiducials = mt2 != null ? mt2.rawFiducials : null;
-
-        double angularVelocity = gyro.getAngularVelocityZWorld().getValueAsDouble();
-        
-        if (
-            mt2 == null
-            || fiducials == null 
-            || fiducials.length == 0
-            || (mt2.tagCount == 1 && fiducials[0].ambiguity > 0.7)
-            || fiducials[0].distToCamera > 4
-        ) {
-            rejectUpdates = true;
-        }
-
-        if (Math.abs(angularVelocity) > 720 || mt2.tagCount == 0) {
-            rejectUpdates = true;
-        }
-
-        if (!rejectUpdates) {
-            poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-            poseEstimator.addVisionMeasurement(
-                mt2.pose,
-                mt2.timestampSeconds    
-            );
-        }
     }
 
     public void resetEncoders() {
@@ -266,6 +243,7 @@ public class DriveSubsystem extends SubsystemBase{
     @Override
     public void periodic() {
         Logger.recordOutput("Drive/Pose", poseEstimator.getEstimatedPosition());
+        Logger.recordOutput("Drive/LimelightPose", LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-one").pose);
         Logger.recordOutput("Drive/Pose/X", poseEstimator.getEstimatedPosition().getX());
         Logger.recordOutput("Drive/Pose/Y", poseEstimator.getEstimatedPosition().getY());
         Logger.recordOutput("Drive/Pose/Rotation", poseEstimator.getEstimatedPosition().getRotation().getDegrees());
@@ -306,7 +284,7 @@ public class DriveSubsystem extends SubsystemBase{
             boolean useMegaTag2 = true; //set to false to use MegaTag1
             boolean doRejectUpdate = false;
             if(useMegaTag2 == false) {
-                LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+                LimelightHelpers.PoseEstimate mt1 = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-one");
                 if(mt1.tagCount == 1 && mt1.rawFiducials.length == 1) {
                     if(mt1.rawFiducials[0].ambiguity > .7) {
                         doRejectUpdate = true;
@@ -323,8 +301,8 @@ public class DriveSubsystem extends SubsystemBase{
                     poseEstimator.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);
                 }
             } else if (useMegaTag2 == true) {
-                LimelightHelpers.SetRobotOrientation("limelight", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-                LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+                LimelightHelpers.SetRobotOrientation("limelight-one", poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+                LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-one");
                 if(Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) {
                     // if our angular velocity is greater than 720 degrees per second, ignore vision updates
                     doRejectUpdate = true;
