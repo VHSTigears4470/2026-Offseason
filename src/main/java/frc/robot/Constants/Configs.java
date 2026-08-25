@@ -64,7 +64,8 @@ public final class Configs {
 
             BL_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(50);
+                .smartCurrentLimit(50)
+                .inverted(false);
             BL_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -77,7 +78,7 @@ public final class Configs {
             BR_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(true);
+                .inverted(false);
             BR_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -87,5 +88,12 @@ public final class Configs {
                 .apply(new FeedForwardConfig().kV(FF_VELOCITY))
                 .outputRange(-1, 1);
         }
+    }
+
+    public static final class Shooter {
+        public static final SparkFlexConfig FLYWHEEL_RIGHT_CONFIG = new SparkFlexConfig();
+        public static final SparkFlexConfig FLYWHEEL_LEFT_CONFIG = new SparkFlexConfig();
+        public static final SparkMaxConfig FEEDER_CONFIG = new SparkMaxConfig();
+        public static final SparkMaxConfig HOPPER_CONFIG = new SparkMaxConfig();
     }
 }

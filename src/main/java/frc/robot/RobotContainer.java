@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OI;
 import frc.robot.Constants.Operating;
+import frc.robot.Constants.Operating.Constants;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class RobotContainer {
@@ -31,35 +32,31 @@ public class RobotContainer {
   private final AutoRoutine myTrajectory180;
 
   public RobotContainer() {
-    initSubystems();
-    if (driveSub != null) {
-     autoFactory = new AutoFactory( 
-            //Switch to odometry methods if needed?
-            driveSub::getEstimatedPosition, // A function that returns the current robot pose - might have to implement limelight first
-            driveSub::resetPose, // A function that resets the current robot pose to the provided Pose2d     
-            driveSub::followTrajectory, // The drive subsystem trajectory follower 
-            true, // If alliance flipping should be enabled 
-            driveSub // The drive subsystem
-        );
+    driveSub = new DriveSubsystem();
+    autoFactory = new AutoFactory( 
+        //Switch to odometry methods if needed?
+        driveSub::getOdometry, // A function that returns the current robot pose - might have to implement limelight first
+        driveSub::resetOdometry, // A function that resets the current robot pose to the provided Pose2d     
+        driveSub::followTrajectory, // The drive subsystem trajectory follower 
+        true, // If alliance flipping should be enabled 
+        driveSub // The drive subsystem
+      );
+      initSubystems();
       configureBindings();
 
       myTrajectoryMeter = myTrajectoryMeterAuto();
       myTrajectory180 = myTrajectory180Auto();
-    }
-    else {
-      autoFactory = null;
-      myTrajectoryMeter = null;
-      myTrajectory180 = null;
-    }
   }
 
   public AutoRoutine myTrajectoryMeterAuto() {
     if (autoFactory == null) {
+      System.out.println("AutoFactory is null");
       return null;
     }
+    
     AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward");
 
-    AutoTrajectory trajectory = autoRoutine.trajectory("Meter");
+    AutoTrajectory trajectory = autoRoutine.trajectory("Meter.traj");
 
     autoRoutine.active().onTrue(
             Commands.sequence(
@@ -96,8 +93,8 @@ public class RobotContainer {
     LimelightHelpers.setPipelineIndex("limelight-one", 1);
       LimelightHelpers.setupPortForwardingUSB(0);
 
-      driveSub = new DriveSubsystem();
-
+      // driveSub = new DriveSubsystem();
+      driverController.y().onTrue(myTrajectoryMeterAuto().cmd());
       driveSub.setDefaultCommand(new RunCommand(
           () -> {
             double y = OI.Constants.DRIVER_AXIS_Y_INVERTED * MathUtil

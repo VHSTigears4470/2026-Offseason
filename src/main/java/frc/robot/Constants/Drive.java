@@ -22,7 +22,7 @@ public final class Drive {
         public static final double FL_ANGULAR_OFFSET = Math.PI/2;
         public static final double BL_ANGULAR_OFFSET =  Math.PI;
         public static final double FR_ANGULAR_OFFSET = Math.PI;
-        public static final double BR_ANGULAR_OFFSET = -Math.PI/2;
+        public static final double BR_ANGULAR_OFFSET = Math.PI/2;
 
         public enum MotorLocation {
             FRONT_LEFT("FrontLeft"),
@@ -59,7 +59,7 @@ public final class Drive {
         public static final int DRIVE_MOTOR_PINION_TEETH = 16;
         public static final double WHEEL_DIAMETER = Units.inchesToMeters(3);
         public static final double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * Math.PI;
-        public static final double DRIVE_MOTOR_REDUCTION = 3.56 * 19.0 / DRIVE_MOTOR_PINION_TEETH; 
+        public static final double DRIVE_MOTOR_REDUCTION = 3.56 * 19 / DRIVE_MOTOR_PINION_TEETH; 
                                                           //(bevel * spur) /(pinion * bevel_secondary)   
         public static final double DRIVE_MOTOR_FREE_RPS = 5676.0 / 60.0;
         public static final double DRIVE_WHEEL_FREE_RPS = (DRIVE_MOTOR_FREE_RPS * WHEEL_CIRCUMFERENCE) / DRIVE_MOTOR_REDUCTION;

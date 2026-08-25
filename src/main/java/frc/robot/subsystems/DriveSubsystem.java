@@ -36,7 +36,7 @@ import frc.robot.Constants.Drive.Constants.MotorLocation;
 import frc.robot.Constants.IDs;
 import frc.robot.Constants.Operating;
 
-public class DriveSubsystem extends SubsystemBase{
+public class DriveSubsystem extends SubsystemBase {
     private SwerveModule frontLeft = null;
     private SwerveModule frontRight = null;
     private SwerveModule backLeft = null;  
@@ -127,7 +127,8 @@ public class DriveSubsystem extends SubsystemBase{
     }
 
     public void followTrajectory(SwerveSample sample) {
-        Pose2d pose = getEstimatedPosition(); 
+        Pose2d pose = getOdometry(); //getEstimatedPosition();
+
 
         ChassisSpeeds speeds = new ChassisSpeeds(
             sample.vx + xController.calculate(pose.getX(), sample.x),
