@@ -29,6 +29,7 @@ import org.wpilib.command2.SubsystemBase;
 import frc.robot.components.SwerveModule;
 import frc.robot.components.SwerveModuleIONEO;
 import frc.robot.LimelightHelpers;
+import frc.robot.Robot;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.CAN;
 import frc.robot.Constants.Configs;
@@ -112,26 +113,24 @@ public class DriveSubsystem extends SubsystemBase {
         double ySpeedDelivered = ySpeed * Drive.Constants.MAX_METERS_PER_SECOND * multiplier;
         double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * multiplier;
 
-        SwerveModuleVelocity[] SwerveModuleVelocitys = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocitys(
-            fieldRelative
-                ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                getRotation2d())
-                : new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotDelivered));
-        SwerveDriveKinematics.desaturateWheelSpeeds(
+        ChassisVelocities chassisVelocities = new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotDelivered);
+        if(fieldRelative) chassisVelocities.toRobotRelative(getRotation2d());
+
+        SwerveModuleVelocity[] SwerveModuleVelocitys = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(chassisVelocities);
+        SwerveDriveKinematics.desaturateWheelVelocities(
             SwerveModuleVelocitys, Drive.Constants.MAX_METERS_PER_SECOND);
         desiredStates = SwerveModuleVelocitys;
 
-        frontLeft.setDesiredState(SwerveModuleVelocitys[0]);
-        frontRight.setDesiredState(SwerveModuleVelocitys[1]);
-        backLeft.setDesiredState(SwerveModuleVelocitys[2]);
-        backRight.setDesiredState(SwerveModuleVelocitys[3]);
+        frontLeft.setDesiredVelocity(SwerveModuleVelocitys[0]);
+        frontRight.setDesiredVelocity(SwerveModuleVelocitys[1]);
+        backLeft.setDesiredVelocity(SwerveModuleVelocitys[2]);
+        backRight.setDesiredVelocity(SwerveModuleVelocitys[3]);
     }
 
     public void followTrajectory(SwerveSample sample) {
         Pose2d pose = getOdometry(); //getEstimatedPosition();
 
-
-        ChassisSpeeds speeds = new ChassisSpeeds(
+        ChassisVelocities speeds = new ChassisVelocities(
             sample.vx + xController.calculate(pose.getX(), sample.x),
             sample.vy + yController.calculate(pose.getY(), sample.y),
             sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
@@ -140,26 +139,26 @@ public class DriveSubsystem extends SubsystemBase {
         driveFieldRelative(speeds);
     }
 
-    public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {
-        ChassisSpeeds relativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getRotation2d());
+    public void driveFieldRelative(ChassisVelocities fieldRelativeVelocities) {
+        ChassisVelocities relativeSpeeds = fieldRelativeVelocities.toRobotRelative(getRotation2d());
         driveRobotRelative(relativeSpeeds);
     }
 
-    public void driveRobotRelative(ChassisSpeeds relativeSpeeds) {
-        ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(relativeSpeeds, 0.02);
-        SwerveModuleVelocity[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocitys(targetSpeeds);
-        frontLeft.setDesiredState(targetStates[0]);
-        frontRight.setDesiredState(targetStates[1]);
-        backLeft.setDesiredState(targetStates[2]);
-        backRight.setDesiredState(targetStates[3]);
+    public void driveRobotRelative(ChassisVelocities relativeVelocities) {
+        ChassisVelocities targetSpeeds = relativeVelocities.discretize(0.02);
+        SwerveModuleVelocity[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(targetSpeeds);
+        frontLeft.setDesiredVelocity(targetStates[0]);
+        frontRight.setDesiredVelocity(targetStates[1]);
+        backLeft.setDesiredVelocity(targetStates[2]);
+        backRight.setDesiredVelocity(targetStates[3]);
     }
 
-    public SwerveModuleVelocity[] getSwerveModuleVelocitys() {
+    public SwerveModuleVelocity[] getSwerveModuleVelocities() {
         return new SwerveModuleVelocity[] {
-            frontLeft.getState(),
-            frontRight.getState(),
-            backLeft.getState(),
-            backRight.getState()
+            frontLeft.getVelocity(),
+            frontRight.getVelocity(),
+            backLeft.getVelocity(),
+            backRight.getVelocity()
         };
     }
 
@@ -182,19 +181,19 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public Pose2d getOdometry() {
-        return odometry.getPoseMeters();
+        return odometry.getPose();
     }
 
     public Pose2d getEstimatedPosition() { 
         return poseEstimator.getEstimatedPosition();
     }
 
-    public ChassisSpeeds getRobotRelativeSpeeds() {
-        return Drive.Constants.DRIVE_KINEMATICS.toChassisSpeeds(
-            frontLeft.getState(),
-            frontRight.getState(),
-            backLeft.getState(),
-            backRight.getState()
+    public ChassisVelocities getRobotRelativeSVelocities() {
+        return Drive.Constants.DRIVE_KINEMATICS.toChassisVelocities(
+            frontLeft.getVelocity(),
+            frontRight.getVelocity(),
+            backLeft.getVelocity(),
+            backRight.getVelocity()
         );
     }
 
@@ -239,7 +238,7 @@ public class DriveSubsystem extends SubsystemBase {
         backRight.stopMotors();
 
         for(int i = 0; i < desiredStates.length; i++)
-            desiredStates[i].speedMetersPerSecond = 0;
+            desiredStates[i].velocity = 0;
     }
 
     @Override
@@ -257,18 +256,18 @@ public class DriveSubsystem extends SubsystemBase {
         }
 
         Logger.recordOutput("Drive/ModuleStates/Desired", desiredStates);
-        Logger.recordOutput("Drive/ModuleStates/Actual", getSwerveModuleVelocitys());
+        Logger.recordOutput("Drive/ModuleStates/Actual", getSwerveModuleVelocities());
 
         Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
 
-        double now = Timer.getFPGATimestamp();
+        double now = Timer.getMonotonicTimestamp();
         if (now - lastMatchLog > 0.2) {
             lastMatchLog = now;
-            Logger.recordOutput("Match/TimeRemaining", DriverStation.getMatchTime());
+            Logger.recordOutput("Match/TimeRemaining", Timer.getMatchTime());
         }
 
-        boolean teleop = DriverStation.isTeleopEnabled();
-        boolean auton = DriverStation.isAutonomousEnabled();
+        boolean teleop = Robot.isTeleopEnabled();
+        boolean auton = Robot.isAutonomousEnabled();
         if (teleop != lastTeleopEnabled || auton != lastAutonomousEnabled) {
             lastTeleopEnabled = teleop;
             lastAutonomousEnabled = auton;
@@ -279,7 +278,7 @@ public class DriveSubsystem extends SubsystemBase {
         }
 
         odometry.update(getRotation2d(), getSwerveModulePositions());
-        poseEstimator.updateWithTime(Timer.getFPGATimestamp(), getRotation2d(), getSwerveModulePositions());
+        poseEstimator.updateWithTime(Timer.getMonotonicTimestamp(), getRotation2d(), getSwerveModulePositions());
 
         //rename "limelight"
         if(Operating.Constants.USING_LIMELIGHT) {
