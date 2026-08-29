@@ -1,6 +1,6 @@
 package frc.robot.components;
 
-import org.wpilib.math.kinematics.SwerveModuleState;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface SwerveModuleIO {
@@ -19,7 +19,7 @@ public interface SwerveModuleIO {
 
     default void updateInputs(SwerveModuleIOInputsAutoLogged inputs) {}
 
-    default public void setDesiredState(SwerveModuleState state) {}
+    default public void setDesiredVelocity(SwerveModuleVelocity velocity) {}
 
     default public void resetDriveEncoder() {}
 }

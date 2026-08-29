@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import org.littletonrobotics.junction.Logger;
 
 import org.wpilib.command2.SubsystemBase;
+
+import frc.robot.Constants.IDs;
 import frc.robot.Constants.Configs.Shooter;
 import frc.robot.Constants.IDs.ShooterConstants;
 import frc.robot.components.PIDMotor;
@@ -20,10 +22,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
     
     public ShooterSubsystem() {
-        flywheelRight = new PIDMotor(new PIDMotorIOSparkFlex(ShooterConstants.FLYWHEEL_RIGHT_ID, Shooter.FLYWHEEL_RIGHT_CONFIG));
-        flywheelLeft = new PIDMotor(new PIDMotorIOSparkFlex(ShooterConstants.FLYWHEEL_LEFT_ID, Shooter.FLYWHEEL_RIGHT_CONFIG));
-        feeder = new PIDMotor(new PIDMotorIOSparkMax(ShooterConstants.FEEDER_ID, Shooter.FEEDER_CONFIG));
-        hopper = new PIDMotor(new PIDMotorIOSparkMax(ShooterConstants.HOPPER_ID, Shooter.HOPPER_CONFIG));
+        flywheelRight = new PIDMotor(new PIDMotorIOSparkFlex(IDs.CANBUSConstants.SHOOTER_CANBUS_ID, ShooterConstants.FLYWHEEL_RIGHT_ID, Shooter.FLYWHEEL_RIGHT_CONFIG));
+        flywheelLeft = new PIDMotor(new PIDMotorIOSparkFlex(IDs.CANBUSConstants.SHOOTER_CANBUS_ID,ShooterConstants.FLYWHEEL_LEFT_ID, Shooter.FLYWHEEL_RIGHT_CONFIG));
+        feeder = new PIDMotor(new PIDMotorIOSparkMax(IDs.CANBUSConstants.SHOOTER_CANBUS_ID,ShooterConstants.FEEDER_ID, Shooter.FEEDER_CONFIG));
+        hopper = new PIDMotor(new PIDMotorIOSparkMax(IDs.CANBUSConstants.SHOOTER_CANBUS_ID,ShooterConstants.HOPPER_ID, Shooter.HOPPER_CONFIG));
 
         RPMToHub = 0;
         desiredRPM = 0;

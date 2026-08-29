@@ -2,7 +2,7 @@ package frc.robot.components;
 
 import org.wpilib.math.geometry.Rotation2d;
 import org.wpilib.math.kinematics.SwerveModulePosition;
-import org.wpilib.math.kinematics.SwerveModuleState;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.command2.SubsystemBase;
 import frc.robot.Constants.Drive.Constants.MotorLocation;
 
@@ -25,13 +25,13 @@ public class SwerveModule extends SubsystemBase {
     Logger.processInputs("SwerveModule/" + motorLocation.getFieldDescription(), inputs);
   }
 
-  public void setDesiredState(SwerveModuleState desiredState) {
-    io.setDesiredState(desiredState);
+  public void setDesiredVelocity(SwerveModuleVelocity desiredVelocity) {
+    io.setDesiredVelocity(desiredVelocity);
   }
 
-  public SwerveModuleState getState() {
+  public SwerveModuleVelocity getVelocity() {
     //Apply chassis offset to the encoder position to get the position relative to the chassis.
-    return new SwerveModuleState(
+    return new SwerveModuleVelocity(
       inputs.driveVelocityMetersPerSec,
       new Rotation2d(inputs.turnPositionRad));
   }
@@ -48,6 +48,6 @@ public class SwerveModule extends SubsystemBase {
   }
 
   public void stopMotors() {
-    setDesiredState(new SwerveModuleState());
+    setDesiredVelocity(new SwerveModuleVelocity());
   }
 }

@@ -7,13 +7,14 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkLowLevel.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.kinematics.SwerveModuleState;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
+
 
 public class SwerveModuleIONEO implements SwerveModuleIO {
 
@@ -28,9 +29,9 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
 
   private double chassisAngularOffset = 0;
 
-  public SwerveModuleIONEO(int driveID, int turnID, double offset, SparkFlexConfig driveConfig, SparkMaxConfig turnConfig) {
-    driveMotor = new SparkFlex(driveID, MotorType.kBrushless);
-    turnMotor = new SparkMax(turnID, MotorType.kBrushless);
+  public SwerveModuleIONEO(int driveBusID, int turnBusID, int driveID, int turnID, double offset, SparkFlexConfig driveConfig, SparkMaxConfig turnConfig) {
+    driveMotor = new SparkFlex(driveBusID, driveID, MotorType.kBrushless);
+    turnMotor = new SparkMax(driveBusID, turnID, MotorType.kBrushless);
     
     System.out.println(driveMotor.configAccessor.getInverted());
 
@@ -47,29 +48,29 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
   }
 
   @Override public void updateInputs(SwerveModuleIOInputsAutoLogged inputs) {
-    inputs.drivePositionMeters = driveEncoder.getPosition();
-    inputs.driveVelocityMetersPerSec = driveEncoder.getVelocity();
-    inputs.driveAppliedVolts = driveMotor.getAppliedOutput() * driveMotor.getBusVoltage();
-    inputs.driveCurrentAmps = driveMotor.getOutputCurrent();
+    inputs.drivePositionMeters = driveEncoder.getPosition().get();
+    inputs.driveVelocityMetersPerSec = driveEncoder.getVelocity().get();
+    inputs.driveAppliedVolts = driveMotor.getAppliedOutput().get() * driveMotor.getBusVoltage().get();
+    inputs.driveCurrentAmps = driveMotor.getOutputCurrent().get();
 
-    inputs.turnPositionRad = turnEncoder.getPosition() - chassisAngularOffset;
-    inputs.turnVelocityRadPerSec = turnEncoder.getVelocity();
-    inputs.turnAppliedVolts = turnMotor.getAppliedOutput() * turnMotor.getBusVoltage();
-    inputs.turnCurrentAmps = turnMotor.getOutputCurrent();
+    inputs.turnPositionRad = turnEncoder.getPosition().get() - chassisAngularOffset;
+    inputs.turnVelocityRadPerSec = turnEncoder.getVelocity().get();
+    inputs.turnAppliedVolts = turnMotor.getAppliedOutput().get() * turnMotor.getBusVoltage().get();
+    inputs.turnCurrentAmps = turnMotor.getOutputCurrent().get();
   }
 
-  @Override public void setDesiredState(SwerveModuleState desiredState)  {
+  @Override public void setDesiredVelocity(SwerveModuleVelocity desiredVelocity)  {
     //Apply chassis offset to the desired state.
-    SwerveModuleState correctedDesiredState = new SwerveModuleState();
-    correctedDesiredState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
-    correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffset));
+    SwerveModuleVelocity correctedDesiredVelocity = new SwerveModuleVelocity();
+    correctedDesiredVelocity.velocity = desiredVelocity.velocity;
+    correctedDesiredVelocity.angle = desiredVelocity.angle.plus(Rotation2d.fromRadians(chassisAngularOffset));
 
     //Optimize the reference state as to not turn more than 90 degrees.
-    correctedDesiredState.optimize(new Rotation2d(turnEncoder.getPosition()));
+    correctedDesiredVelocity = correctedDesiredVelocity.optimize(new Rotation2d(turnEncoder.getPosition().get()));
     
     //Command driving and turning SPARKS toward their respective setpoints.
-    driveController.setSetpoint(correctedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
-    turnController.setSetpoint(correctedDesiredState.angle.getRadians(), ControlType.kPosition);
+    driveController.setSetpoint(correctedDesiredVelocity.velocity, ControlType.kVelocity);
+    turnController.setSetpoint(correctedDesiredVelocity.angle.getRadians(), ControlType.kPosition);
   }
 
   @Override public void resetDriveEncoder() {
