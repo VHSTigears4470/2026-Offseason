@@ -32,8 +32,9 @@ public class Robot extends LoggedRobot  {
     Logger.recordMetadata("ProjectName", "2026-Offseason"); // Set a metadata value
     Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
-    if (isReal()) { 
-      Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+    if (isReal()) {
+		// FIXED PATH TO SYSCORE
+		Logger.addDataReceiver(new WPILOGWriter("/home/systemcore/logs")); 
     } else {
       setUseTiming(false); // Run as fast as possible
       String logPath = null;

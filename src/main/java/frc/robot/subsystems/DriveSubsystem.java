@@ -8,7 +8,7 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import com.limelightvision.Limelight;
 import com.limelightvision.Limelight.PoseEstimateType;
 
-import choreo.trajectory.SwerveSample;
+// import choreo.trajectory.SwerveSample;
 // import org.wpilib.hardware.hal.FRCNetComm.tInstances;
 // import org.wpilib.hardware.hal.FRCNetComm.tResourceType;
 import org.wpilib.math.linalg.VecBuilder;
@@ -135,18 +135,18 @@ public class DriveSubsystem extends SubsystemBase {
         backRight.setDesiredVelocity(SwerveModuleVelocitys[3]);
     }
 
-    public void followTrajectory(SwerveSample sample) {
-        Pose2d pose = getOdometry(); //getEstimatedPosition();
-
-        ChassisVelocities speeds = new ChassisVelocities(
-            sample.vx + xController.calculate(pose.getX(), sample.x),
-            sample.vy + yController.calculate(pose.getY(), sample.y),
-            sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
-        );
-
-        driveFieldRelative(speeds);
-    }
-
+    // public void followTrajectory(SwerveSample sample) {
+    //     Pose2d pose = getOdometry(); //getEstimatedPosition();
+    //
+    //     ChassisVelocities speeds = new ChassisVelocities(
+    //         sample.vx + xController.calculate(pose.getX(), sample.x),
+    //         sample.vy + yController.calculate(pose.getY(), sample.y),
+    //         sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
+    //     );
+    //
+    //     driveFieldRelative(speeds);
+    // }
+    //
     public void driveFieldRelative(ChassisVelocities fieldRelativeVelocities) {
         ChassisVelocities relativeSpeeds = fieldRelativeVelocities.toRobotRelative(getRotation2d());
         driveRobotRelative(relativeSpeeds);

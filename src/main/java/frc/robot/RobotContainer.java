@@ -6,10 +6,10 @@ package frc.robot;
 
 import org.littletonrobotics.junction.Logger;
 
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
-import choreo.trajectory.Trajectory;
+// import choreo.auto.AutoFactory;
+// import choreo.auto.AutoRoutine;
+// import choreo.auto.AutoTrajectory;
+// import choreo.trajectory.Trajectory;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
@@ -32,7 +32,6 @@ public class RobotContainer {
   // private final AutoRoutine myTrajectory180;
 
   public RobotContainer() {
-    driveSub = new DriveSubsystem();
     // autoFactory = new AutoFactory( 
     //     //Switch to odometry methods if needed?
     //     driveSub::getOdometry, // A function that returns the current robot pose - might have to implement limelight first
