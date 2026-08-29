@@ -6,95 +6,92 @@ package frc.robot;
 
 import org.littletonrobotics.junction.Logger;
 
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
-import choreo.trajectory.Trajectory;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+// import choreo.auto.AutoFactory;
+// import choreo.auto.AutoRoutine;
+// import choreo.auto.AutoTrajectory;
+// import choreo.trajectory.Trajectory;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.RunCommand;
+import org.wpilib.command2.button.CommandGamepad;
+
 import frc.robot.Constants.OI;
 import frc.robot.Constants.Operating;
-import frc.robot.Constants.Operating.Constants;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class RobotContainer {
-  private final CommandXboxController driverController = new CommandXboxController(OI.Constants.DRIVE_CONTROLLER_PORT);
+  private final CommandGamepad driverController = new CommandGamepad(OI.Constants.DRIVE_CONTROLLER_PORT);
 
   private DriveSubsystem driveSub;
 
-  private final AutoFactory autoFactory;
+  // private final AutoFactory autoFactory;
 
-  private final AutoRoutine myTrajectoryMeter;
+  // private final AutoRoutine myTrajectoryMeter;
 
-  private final AutoRoutine myTrajectory180;
+  // private final AutoRoutine myTrajectory180;
 
   public RobotContainer() {
-    driveSub = new DriveSubsystem();
-    autoFactory = new AutoFactory( 
-        //Switch to odometry methods if needed?
-        driveSub::getOdometry, // A function that returns the current robot pose - might have to implement limelight first
-        driveSub::resetOdometry, // A function that resets the current robot pose to the provided Pose2d     
-        driveSub::followTrajectory, // The drive subsystem trajectory follower 
-        true, // If alliance flipping should be enabled 
-        driveSub // The drive subsystem
-      );
+    // autoFactory = new AutoFactory( 
+    //     //Switch to odometry methods if needed?
+    //     driveSub::getOdometry, // A function that returns the current robot pose - might have to implement limelight first
+    //     driveSub::resetOdometry, // A function that resets the current robot pose to the provided Pose2d     
+    //     driveSub::followTrajectory, // The drive subsystem trajectory follower 
+    //     true, // If alliance flipping should be enabled 
+    //     driveSub // The drive subsystem
+    //   );
       initSubystems();
       configureBindings();
 
-      myTrajectoryMeter = myTrajectoryMeterAuto();
-      myTrajectory180 = myTrajectory180Auto();
+      // myTrajectoryMeter = myTrajectoryMeterAuto();
+      // myTrajectory180 = myTrajectory180Auto();
   }
 
-  public AutoRoutine myTrajectoryMeterAuto() {
-    if (autoFactory == null) {
-      System.out.println("AutoFactory is null");
-      return null;
-    }
+  // public AutoRoutine myTrajectoryMeterAuto() {
+  //   if (autoFactory == null) {
+  //     System.out.println("AutoFactory is null");
+  //     return null;
+  //   }
     
-    AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward");
+  //   AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward");
 
-    AutoTrajectory trajectory = autoRoutine.trajectory("Meter.traj");
+  //   AutoTrajectory trajectory = autoRoutine.trajectory("Meter.traj");
 
-    autoRoutine.active().onTrue(
-            Commands.sequence(
-                trajectory.resetOdometry(),
-                trajectory.cmd()
-            )
-        );
+  //   autoRoutine.active().onTrue(
+  //           Commands.sequence(
+  //               trajectory.resetOdometry(),
+  //               trajectory.cmd()
+  //           )
+  //       );
 
-    return autoRoutine;
+  //   return autoRoutine;
 
-  }
+  // }
 
-  public AutoRoutine myTrajectory180Auto() {
-    if (autoFactory == null) {
-      return null;
-    }
-    AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward and Rotate 180");
+  // public AutoRoutine myTrajectory180Auto() {
+  //   if (autoFactory == null) {
+  //     return null;
+  //   }
+  //   AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward and Rotate 180");
 
-    AutoTrajectory trajectory = autoRoutine.trajectory("Rotation180");
+  //   AutoTrajectory trajectory = autoRoutine.trajectory("Rotation180");
 
-    autoRoutine.active().onTrue(
-            Commands.sequence(
-                trajectory.resetOdometry(),
-                trajectory.cmd()
-            )
-        );
+  //   autoRoutine.active().onTrue(
+  //           Commands.sequence(
+  //               trajectory.resetOdometry(),
+  //               trajectory.cmd()
+  //           )
+  //       );
 
-    return autoRoutine;
+  //   return autoRoutine;
 
-  }
+  // }
 
   public void initSubystems() {
     if(Operating.Constants.USING_DRIVE)
-    LimelightHelpers.setPipelineIndex("limelight-one", 1);
-      LimelightHelpers.setupPortForwardingUSB(0);
 
-      // driveSub = new DriveSubsystem();
-      driverController.y().onTrue(myTrajectoryMeterAuto().cmd());
+      driveSub = new DriveSubsystem();
+      // driverController.y().onTrue(myTrajectoryMeterAuto().cmd());
       driveSub.setDefaultCommand(new RunCommand(
           () -> {
             double y = OI.Constants.DRIVER_AXIS_Y_INVERTED * MathUtil
@@ -118,13 +115,13 @@ public class RobotContainer {
           driveSub));
     }
 
-    public Command getAutonomousCommand() 
-    {
-      if (myTrajectoryMeter == null) { //myTrajectory180 == null) {
-        return Commands.none();
-      }
-      return myTrajectoryMeter.cmd();
-      //return myTrajectory180.cmd();    
+    public Command getAutonomousCommand() {
+      // if (myTrajectoryMeter == null) { //myTrajectory180 == null) {
+      //   return Commands.none();
+      // }
+      // return myTrajectoryMeter.cmd();
+      // return myTrajectory180.cmd();    
+      return null;
     }
 
     private void configureBindings() {}

@@ -2,7 +2,7 @@ package frc.robot.components;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkLowLevel;
 
 public interface PIDMotorIO {
     @AutoLog
@@ -15,7 +15,7 @@ public interface PIDMotorIO {
 
     default public void resetEncoder(){}
 
-    default public void setSetpoint(double setpoint, ControlType controlType, double FF){}
+    default public void setSetpoint(double setpoint, SparkLowLevel.ControlType controlType, double FF){}
 
     default public void setVelocity(double RPM, double FF){}
 

@@ -21,4 +21,9 @@ public class IDs {
         public static final int HOPPER_ID = 23;
         public static final int FEEDER_ID = 24;
     }
+
+    public static final class CANBUSConstants {
+        public static final int DRIVE_CANBUS_ID = 0;
+        public static final int SHOOTER_CANBUS_ID = 0;
+    }
 }
