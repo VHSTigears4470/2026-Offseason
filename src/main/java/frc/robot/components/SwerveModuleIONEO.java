@@ -12,8 +12,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.SwerveModuleState;
 
 public class SwerveModuleIONEO implements SwerveModuleIO {
 

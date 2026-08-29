@@ -2,34 +2,35 @@ package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
+import org.wpilib.driverstation.DriverStation;
+import org.wpilib.system.Timer;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
 import choreo.trajectory.SwerveSample;
-import edu.wpi.first.hal.FRCNetComm.tInstances;
-import edu.wpi.first.hal.FRCNetComm.tResourceType;
-import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+// import org.wpilib.hardware.hal.FRCNetComm.tInstances;
+// import org.wpilib.hardware.hal.FRCNetComm.tResourceType;
+import org.wpilib.hardware.hal.HAL;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
+import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.kinematics.SwerveDriveKinematics;
+import org.wpilib.math.kinematics.SwerveDriveOdometry;
+import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.math.util.Units;
+import org.wpilib.system.RobotController;
+import org.wpilib.command2.SubsystemBase;
 import frc.robot.components.SwerveModule;
 import frc.robot.components.SwerveModuleIONEO;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers;
+import frc.robot.Constants.CAN;
 import frc.robot.Constants.Configs;
 import frc.robot.Constants.Drive;
 import frc.robot.Constants.Drive.Constants.MotorLocation;
@@ -42,9 +43,9 @@ public class DriveSubsystem extends SubsystemBase {
     private SwerveModule backLeft = null;  
     private SwerveModule backRight = null;
     
-    private SwerveModuleState desiredStates[] = {new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState()};
+    private SwerveModuleVelocity desiredStates[] = {new SwerveModuleVelocity(), new SwerveModuleVelocity(), new SwerveModuleVelocity(), new SwerveModuleVelocity()};
 
-    private final Pigeon2 gyro = Operating.Constants.USING_GYRO ? new Pigeon2(IDs.DriveConstants.PIGEON_ID) : null;
+    private final Pigeon2 gyro = Operating.Constants.USING_GYRO ? new Pigeon2(IDs.DriveConstants.PIGEON_ID, CAN.Constants.PigeonCAN) : null;
     SwerveDriveOdometry odometry = null;
     SwerveDrivePoseEstimator poseEstimator = null;
     private double lastMatchLog = 0.0;
@@ -101,8 +102,8 @@ public class DriveSubsystem extends SubsystemBase {
             new Pose2d()
         ); // todo: standard deviations? idrk how to do ill ask nathan
         headingController.enableContinuousInput(-Math.PI, Math.PI);
-        
-        HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
+        // TODO: FIX     
+        // HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
     }
 
     public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, String statusName) {
@@ -111,19 +112,19 @@ public class DriveSubsystem extends SubsystemBase {
         double ySpeedDelivered = ySpeed * Drive.Constants.MAX_METERS_PER_SECOND * multiplier;
         double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * multiplier;
 
-        SwerveModuleState[] swerveModuleStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleStates(
+        SwerveModuleVelocity[] SwerveModuleVelocitys = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocitys(
             fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
                 getRotation2d())
-                : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
+                : new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotDelivered));
         SwerveDriveKinematics.desaturateWheelSpeeds(
-            swerveModuleStates, Drive.Constants.MAX_METERS_PER_SECOND);
-        desiredStates = swerveModuleStates;
+            SwerveModuleVelocitys, Drive.Constants.MAX_METERS_PER_SECOND);
+        desiredStates = SwerveModuleVelocitys;
 
-        frontLeft.setDesiredState(swerveModuleStates[0]);
-        frontRight.setDesiredState(swerveModuleStates[1]);
-        backLeft.setDesiredState(swerveModuleStates[2]);
-        backRight.setDesiredState(swerveModuleStates[3]);
+        frontLeft.setDesiredState(SwerveModuleVelocitys[0]);
+        frontRight.setDesiredState(SwerveModuleVelocitys[1]);
+        backLeft.setDesiredState(SwerveModuleVelocitys[2]);
+        backRight.setDesiredState(SwerveModuleVelocitys[3]);
     }
 
     public void followTrajectory(SwerveSample sample) {
@@ -146,15 +147,15 @@ public class DriveSubsystem extends SubsystemBase {
 
     public void driveRobotRelative(ChassisSpeeds relativeSpeeds) {
         ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(relativeSpeeds, 0.02);
-        SwerveModuleState[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleStates(targetSpeeds);
+        SwerveModuleVelocity[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocitys(targetSpeeds);
         frontLeft.setDesiredState(targetStates[0]);
         frontRight.setDesiredState(targetStates[1]);
         backLeft.setDesiredState(targetStates[2]);
         backRight.setDesiredState(targetStates[3]);
     }
 
-    public SwerveModuleState[] getSwerveModuleStates() {
-        return new SwerveModuleState[] {
+    public SwerveModuleVelocity[] getSwerveModuleVelocitys() {
+        return new SwerveModuleVelocity[] {
             frontLeft.getState(),
             frontRight.getState(),
             backLeft.getState(),
@@ -256,7 +257,7 @@ public class DriveSubsystem extends SubsystemBase {
         }
 
         Logger.recordOutput("Drive/ModuleStates/Desired", desiredStates);
-        Logger.recordOutput("Drive/ModuleStates/Actual", getSwerveModuleStates());
+        Logger.recordOutput("Drive/ModuleStates/Actual", getSwerveModuleVelocitys());
 
         Logger.recordOutput("Power/BatteryVoltage", RobotController.getBatteryVoltage());
 

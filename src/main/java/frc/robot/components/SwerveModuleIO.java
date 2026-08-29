@@ -1,6 +1,6 @@
 package frc.robot.components;
 
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+import org.wpilib.math.kinematics.SwerveModuleState;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface SwerveModuleIO {

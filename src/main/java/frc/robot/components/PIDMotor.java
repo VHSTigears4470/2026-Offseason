@@ -1,6 +1,6 @@
 package frc.robot.components;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.command2.SubsystemBase;
 
 import org.littletonrobotics.junction.Logger;
 

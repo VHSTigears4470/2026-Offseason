@@ -10,18 +10,19 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import choreo.trajectory.Trajectory;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
+import org.wpilib.command2.RunCommand;
+import org.wpilib.command2.button.CommandGamepad;
+
 import frc.robot.Constants.OI;
 import frc.robot.Constants.Operating;
 import frc.robot.Constants.Operating.Constants;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class RobotContainer {
-  private final CommandXboxController driverController = new CommandXboxController(OI.Constants.DRIVE_CONTROLLER_PORT);
+  private final CommandGamepad driverController = new CommandGamepad(OI.Constants.DRIVE_CONTROLLER_PORT);
 
   private DriveSubsystem driveSub;
 
