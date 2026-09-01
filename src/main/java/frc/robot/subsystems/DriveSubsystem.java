@@ -122,7 +122,9 @@ public class DriveSubsystem extends SubsystemBase {
         double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * multiplier;
 
         ChassisVelocities chassisVelocities = new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotDelivered);
-        if(fieldRelative) chassisVelocities.toRobotRelative(getRotation2d());
+        if(fieldRelative) {
+			chassisVelocities = chassisVelocities.toRobotRelative(getRotation2d());
+		}
 
         SwerveModuleVelocity[] SwerveModuleVelocitys = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(chassisVelocities);
         SwerveModuleVelocitys = SwerveDriveKinematics.desaturateWheelVelocities(
