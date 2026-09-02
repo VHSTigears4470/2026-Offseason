@@ -121,18 +121,19 @@ public class DriveSubsystem extends SubsystemBase {
         double ySpeedDelivered = ySpeed * Drive.Constants.MAX_METERS_PER_SECOND * multiplier;
         double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * multiplier;
 
-        ChassisVelocities chassisVelocities = new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotDelivered);
-        if(fieldRelative) chassisVelocities.toRobotRelative(getRotation2d());
+        ChassisVelocities chassisVelocities = new ChassisVelocities(
+            xSpeedDelivered, ySpeedDelivered, rotDelivered);
+        if(fieldRelative) chassisVelocities = chassisVelocities.toRobotRelative(getRotation2d());
 
-        SwerveModuleVelocity[] SwerveModuleVelocitys = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(chassisVelocities);
-        SwerveModuleVelocitys = SwerveDriveKinematics.desaturateWheelVelocities(
-            SwerveModuleVelocitys, Drive.Constants.MAX_METERS_PER_SECOND);
-        desiredStates = SwerveModuleVelocitys;
+        SwerveModuleVelocity[] SwerveModuleVelocities = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(chassisVelocities);
+        SwerveModuleVelocities = SwerveDriveKinematics.desaturateWheelVelocities(
+            SwerveModuleVelocities, Drive.Constants.MAX_METERS_PER_SECOND);
+        desiredStates = SwerveModuleVelocities;
 
-        frontLeft.setDesiredVelocity(SwerveModuleVelocitys[0]);
-        frontRight.setDesiredVelocity(SwerveModuleVelocitys[1]);
-        backLeft.setDesiredVelocity(SwerveModuleVelocitys[2]);
-        backRight.setDesiredVelocity(SwerveModuleVelocitys[3]);
+        frontLeft.setDesiredVelocity(SwerveModuleVelocities[0]);
+        frontRight.setDesiredVelocity(SwerveModuleVelocities[1]);
+        backLeft.setDesiredVelocity(SwerveModuleVelocities[2]);
+        backRight.setDesiredVelocity(SwerveModuleVelocities[3]);
     }
 
     // public void followTrajectory(SwerveSample sample) {

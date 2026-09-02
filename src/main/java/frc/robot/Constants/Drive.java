@@ -7,7 +7,7 @@ import org.wpilib.math.util.Units;
 
 public final class Drive {
     public static final class Constants {
-        public static final double MAX_METERS_PER_SECOND = 4.46;
+        public static final double MAX_METERS_PER_SECOND = 7.60;
         public static final double MAX_ANGULAR_SPEED = 2 * Math.PI; //radians per second
 
         public static final double WHEEL_BASE = Units.inchesToMeters(27.5);  //update?
@@ -19,9 +19,9 @@ public final class Drive {
             new Translation2d(-WHEEL_BASE / 2, TRACK_WIDTH / 2),   //Back Left
             new Translation2d(-WHEEL_BASE / 2, -TRACK_WIDTH / 2)); //Back Right
 
-        public static final double FL_ANGULAR_OFFSET = Math.PI/2;
+        public static final double FL_ANGULAR_OFFSET = -Math.PI/2;
         public static final double BL_ANGULAR_OFFSET =  Math.PI;
-        public static final double FR_ANGULAR_OFFSET = Math.PI;
+        public static final double FR_ANGULAR_OFFSET = 0;
         public static final double BR_ANGULAR_OFFSET = Math.PI/2;
 
         public enum MotorLocation {

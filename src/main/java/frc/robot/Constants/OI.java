@@ -12,7 +12,7 @@ public final class OI {
 
         public static final int DRIVER_AXIS_X = 0;
         public static final int DRIVER_AXIS_Y = 1;
-        public static final int DRIVER_AXIS_ROT = 4;
+        public static final int DRIVER_AXIS_ROT = 2;
         public static final int DRIVER_AXIS_ORIENTED_BUTTON = 1;
     }
 }

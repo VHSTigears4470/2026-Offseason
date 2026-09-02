@@ -16,8 +16,7 @@ public final class Configs {
       
         static {
             //Module constants used to calculate conversion factors and feed forward gain.
-            double DRIVING_FACTOR = Drive.ModuleConstants.WHEEL_DIAMETER * Math.PI
-                / 3.56;
+            double DRIVING_FACTOR = Drive.ModuleConstants.WHEEL_DIAMETER * Math.PI  / 3.56;
             double FF_VELOCITY = 1 / Drive.ModuleConstants.DRIVE_WHEEL_FREE_RPS;
             double TURNING_FACTOR = 2 * Math.PI;
 
@@ -39,7 +38,7 @@ public final class Configs {
             FL_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(true);
+                .inverted(false);
             FL_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -52,7 +51,7 @@ public final class Configs {
             FR_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(true);
+                .inverted(false);
             FR_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
