@@ -4,125 +4,47 @@
 
 package frc.robot;
 
-import org.littletonrobotics.junction.Logger;
-
-// import choreo.auto.AutoFactory;
-// import choreo.auto.AutoRoutine;
-// import choreo.auto.AutoTrajectory;
-// import choreo.trajectory.Trajectory;
-import org.wpilib.math.util.MathUtil;
 import org.wpilib.command2.Command;
-import org.wpilib.command2.Commands;
-import org.wpilib.command2.RunCommand;
 import org.wpilib.command2.button.CommandGamepad;
 
-import frc.robot.Constants.OI;
-import frc.robot.Constants.Operating;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.commands.DriveMotors;
+import frc.robot.subsystems.TestMotorsSubsystem;
+
 
 public class RobotContainer {
-  private final CommandGamepad driverController = new CommandGamepad(OI.Constants.DRIVE_CONTROLLER_PORT);
+  
+  // Replace with CommandPS4Controller or CommandJoystick if needed
+  private final CommandGamepad m_driverController =
+      new CommandGamepad(0);
 
-  private DriveSubsystem driveSub;
-
-  // private final AutoFactory autoFactory;
-
-  // private final AutoRoutine myTrajectoryMeter;
-
-  // private final AutoRoutine myTrajectory180;
-
+  private TestMotorsSubsystem testMotor;
+      
   public RobotContainer() {
-    // autoFactory = new AutoFactory( 
-    //     //Switch to odometry methods if needed?
-    //     driveSub::getOdometry, // A function that returns the current robot pose - might have to implement limelight first
-    //     driveSub::resetOdometry, // A function that resets the current robot pose to the provided Pose2d     
-    //     driveSub::followTrajectory, // The drive subsystem trajectory follower 
-    //     true, // If alliance flipping should be enabled 
-    //     driveSub // The drive subsystem
-    //   );
-      initSubystems();
-      configureBindings();
-
-      // myTrajectoryMeter = myTrajectoryMeterAuto();
-      // myTrajectory180 = myTrajectory180Auto();
+    initSubsystems();    
+    // Configure the trigger bindings
+    configureBindings();
   }
 
-  // public AutoRoutine myTrajectoryMeterAuto() {
-  //   if (autoFactory == null) {
-  //     System.out.println("AutoFactory is null");
-  //     return null;
-  //   }
-    
-  //   AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward");
-
-  //   AutoTrajectory trajectory = autoRoutine.trajectory("Meter.traj");
-
-  //   autoRoutine.active().onTrue(
-  //           Commands.sequence(
-  //               trajectory.resetOdometry(),
-  //               trajectory.cmd()
-  //           )
-  //       );
-
-  //   return autoRoutine;
-
-  // }
-
-  // public AutoRoutine myTrajectory180Auto() {
-  //   if (autoFactory == null) {
-  //     return null;
-  //   }
-  //   AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward and Rotate 180");
-
-  //   AutoTrajectory trajectory = autoRoutine.trajectory("Rotation180");
-
-  //   autoRoutine.active().onTrue(
-  //           Commands.sequence(
-  //               trajectory.resetOdometry(),
-  //               trajectory.cmd()
-  //           )
-  //       );
-
-  //   return autoRoutine;
-
-  // }
-
-  public void initSubystems() {
-    if(Operating.Constants.USING_DRIVE)
-
-      driveSub = new DriveSubsystem();
-      // driverController.y().onTrue(myTrajectoryMeterAuto().cmd());
-      driveSub.setDefaultCommand(new RunCommand(
-          () -> {
-            double y = OI.Constants.DRIVER_AXIS_Y_INVERTED * MathUtil
-                .applyDeadband(driverController.getRawAxis(OI.Constants.DRIVER_AXIS_Y), OI.Constants.DRIVE_DEADBAND);
-            double x = OI.Constants.DRIVER_AXIS_X_INVERTED * MathUtil
-                .applyDeadband(driverController.getRawAxis(OI.Constants.DRIVER_AXIS_X), OI.Constants.DRIVE_DEADBAND);
-            double rot = OI.Constants.DRIVER_AXIS_ROT_INVERTED * MathUtil
-                .applyDeadband(driverController.getRawAxis(OI.Constants.DRIVER_AXIS_ROT), OI.Constants.DRIVE_DEADBAND);
-
-            // Add logging for buttons
-
-            // Record operator inputs with the project logger
-            Logger.recordOutput("Operator/Drive/Y", y);
-            Logger.recordOutput("Operator/Drive/X", x);
-            Logger.recordOutput("Operator/Drive/Rot", rot);
-            Logger.recordOutput("Operator/Drive/LeftTrigger", driverController.leftTrigger().getAsBoolean());
-            Logger.recordOutput("Operator/Drive/RightTrigger", driverController.rightTrigger().getAsBoolean());
-
-            driveSub.drive(y, x, rot, true, "Default / Field Oriented");
-          },
-          driveSub));
-    }
-
-    public Command getAutonomousCommand() {
-      // if (myTrajectoryMeter == null) { //myTrajectory180 == null) {
-      //   return Commands.none();
-      // }
-      // return myTrajectoryMeter.cmd();
-      // return myTrajectory180.cmd();    
-      return null;
-    }
-
-    private void configureBindings() {}
+  private void initSubsystems() {
+      testMotor = new TestMotorsSubsystem(0, 13, false);
   }
+
+  private void configureBindings() {
+    int preset = 1;
+    switch (preset) {
+      default:
+        controllerPresetMain();
+        break;
+    }
+  }
+
+  public Command getAutonomousCommand() {
+        return null;
+  }
+
+  public void controllerPresetMain() { //subject to change (while/on true)
+        double speed = 0.35;
+        m_driverController.dpadUp().whileTrue(new DriveMotors(testMotor, speed));
+  }
+
+}
