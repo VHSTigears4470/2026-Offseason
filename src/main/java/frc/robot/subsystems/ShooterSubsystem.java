@@ -15,6 +15,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final PIDMotor feeder;
     private final PIDMotor hopper;
     private double RPMToHub; //needs to be calculated properly
+    
     private double desiredRPM;
     private boolean shooterActive;
 

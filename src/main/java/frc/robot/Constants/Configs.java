@@ -96,4 +96,30 @@ public final class Configs {
         public static final SparkMaxConfig FEEDER_CONFIG = new SparkMaxConfig();
         public static final SparkMaxConfig HOPPER_CONFIG = new SparkMaxConfig();
     }
+
+    public static final class Intake {
+        public static final SparkMaxConfig INTAKE_CONFIG = new SparkMaxConfig();
+        public static final SparkMaxConfig ROTATE_CONFIG = new SparkMaxConfig();
+
+        public static final double INTAKE_MOTOR_SPEED = 5.0; // temporary value
+        public static final double MOTOR_HEIGHT = 5.0; // temporary value
+
+        static {
+            INTAKE_CONFIG
+                .idleMode(IdleMode.kCoast)
+                .inverted(true)
+                .smartCurrentLimit(50);
+            ROTATE_CONFIG
+                .idleMode(IdleMode.kBrake)
+                .smartCurrentLimit(50);
+            ROTATE_CONFIG.closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .p(.6)
+                .outputRange(-0.85, 0.85)
+                .maxMotion
+                .cruiseVelocity(1500)
+                .maxAcceleration(750)
+                .allowedProfileError(.2);
+        }
+    }
 }

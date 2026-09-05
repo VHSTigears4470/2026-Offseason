@@ -21,4 +21,9 @@ public class IDs {
         public static final int HOPPER_ID = 23;
         public static final int FEEDER_ID = 24;
     }
+
+    public static final class IntakeConstants {
+        public static final int INTAKE_MOTOR_ID = 21;
+        public static final int ROTATE_MOTOR_ID = 22;
+    }
 }
