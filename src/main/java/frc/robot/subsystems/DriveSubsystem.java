@@ -32,6 +32,8 @@ import frc.robot.Constants.Configs;
 import frc.robot.Constants.Drive;
 import frc.robot.Constants.Drive.Constants.MotorLocation;
 import frc.robot.Constants.IDs;
+import frc.robot.Constants.IDs.CANBUSIDs;
+import frc.robot.Constants.IDs.DriveIDs;
 import frc.robot.Constants.Operating;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -42,7 +44,7 @@ public class DriveSubsystem extends SubsystemBase {
     
     private SwerveModuleVelocity desiredStates[] = {new SwerveModuleVelocity(), new SwerveModuleVelocity(), new SwerveModuleVelocity(), new SwerveModuleVelocity()};
 
-    private final Pigeon2 gyro = Operating.Constants.USING_GYRO ? new Pigeon2(IDs.DriveConstants.PIGEON_ID, CAN.Constants.PigeonCAN) : null;
+    private final Pigeon2 gyro = Operating.Constants.USING_GYRO ? new Pigeon2(DriveIDs.PIGEON_ID, CAN.Constants.PigeonCAN) : null;
     SwerveDriveOdometry odometry = null;
     SwerveDrivePoseEstimator poseEstimator = null;
     private double lastMatchLog = 0.0;
@@ -59,40 +61,40 @@ public class DriveSubsystem extends SubsystemBase {
     public DriveSubsystem() {
             frontLeft = new SwerveModule(
                 new SwerveModuleIONEO(
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.DriveConstants.FL_DRIVE_ID,
-                    IDs.DriveConstants.FL_TURN_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    DriveIDs.FL_DRIVE_ID,
+                    DriveIDs.FL_TURN_ID,
                     Drive.Constants.FL_ANGULAR_OFFSET,
-                    Configs.SwerveModule.FL_CONFIG,
-                    Configs.SwerveModule.TURNING_CONFIG),
+                    Configs.SwerveModuleConfigs.FL_CONFIG,
+                    Configs.SwerveModuleConfigs.TURNING_CONFIG),
                 MotorLocation.FRONT_LEFT);
             frontRight = new SwerveModule(new SwerveModuleIONEO(
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.DriveConstants.FR_DRIVE_ID,
-                    IDs.DriveConstants.FR_TURN_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    DriveIDs.FR_DRIVE_ID,
+                    DriveIDs.FR_TURN_ID,
                     Drive.Constants.FR_ANGULAR_OFFSET,
-                    Configs.SwerveModule.FR_CONFIG,
-                    Configs.SwerveModule.TURNING_CONFIG),
+                    Configs.SwerveModuleConfigs.FR_CONFIG,
+                    Configs.SwerveModuleConfigs.TURNING_CONFIG),
                 MotorLocation.FRONT_RIGHT);
             backLeft = new SwerveModule(new SwerveModuleIONEO(
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.DriveConstants.BL_DRIVE_ID,
-                    IDs.DriveConstants.BL_TURN_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    DriveIDs.BL_DRIVE_ID,
+                    DriveIDs.BL_TURN_ID,
                     Drive.Constants.BL_ANGULAR_OFFSET,
-                    Configs.SwerveModule.BL_CONFIG,
-                    Configs.SwerveModule.TURNING_CONFIG),
+                    Configs.SwerveModuleConfigs.BL_CONFIG,
+                    Configs.SwerveModuleConfigs.TURNING_CONFIG),
                 MotorLocation.BACK_LEFT);
             backRight = new SwerveModule(new SwerveModuleIONEO(
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.CANBUSConstants.DRIVE_CANBUS_ID,
-                    IDs.DriveConstants.BR_DRIVE_ID,
-                    IDs.DriveConstants.BR_TURN_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    DriveIDs.BR_DRIVE_ID,
+                    DriveIDs.BR_TURN_ID,
                     Drive.Constants.BR_ANGULAR_OFFSET,
-                    Configs.SwerveModule.BR_CONFIG,
-                    Configs.SwerveModule.TURNING_CONFIG),
+                    Configs.SwerveModuleConfigs.BR_CONFIG,
+                    Configs.SwerveModuleConfigs.TURNING_CONFIG),
                  MotorLocation.BACK_RIGHT);
 
         odometry = new SwerveDriveOdometry(

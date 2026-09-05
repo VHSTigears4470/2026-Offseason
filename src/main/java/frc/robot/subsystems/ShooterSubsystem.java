@@ -4,105 +4,100 @@ import org.littletonrobotics.junction.Logger;
 
 import org.wpilib.command2.SubsystemBase;
 
-import frc.robot.Constants.IDs;
-import frc.robot.Constants.Configs.Shooter;
-import frc.robot.Constants.IDs.ShooterConstants;
+import frc.robot.Constants.IDs.CANBUSIDs;
+import frc.robot.Constants.IDs.ShooterIDs;
+import frc.robot.Constants.Configs.ShooterConfigs;
+import frc.robot.Constants.Shooter;
 import frc.robot.components.PIDMotor;
 import frc.robot.components.PIDMotorIOSparkFlex;
 import frc.robot.components.PIDMotorIOSparkMax;
 
 public class ShooterSubsystem extends SubsystemBase {
-    private final PIDMotor flywheelRight; //leader
-    private final PIDMotor flywheelLeft;
-    private final PIDMotor feeder;
-    private final PIDMotor hopper;
-    private double RPMToHub; //needs to be calculated properly
-    private double desiredRPM;
-    private boolean shooterActive;
-
+    private final PIDMotor flywheelMotor; 
+    private final PIDMotor hoodMotor;
+    private final PIDMotor feederMotor;
+    private final PIDMotor hopperMotor;
     
+    private double toHubPosition; 
+    private boolean shooterActive;
+    private boolean shootingManual;
+
     public ShooterSubsystem() {
-        flywheelRight = new PIDMotor(new PIDMotorIOSparkFlex(IDs.CANBUSConstants.SHOOTER_CANBUS_ID, ShooterConstants.FLYWHEEL_RIGHT_ID, Shooter.FLYWHEEL_RIGHT_CONFIG));
-        flywheelLeft = new PIDMotor(new PIDMotorIOSparkFlex(IDs.CANBUSConstants.SHOOTER_CANBUS_ID,ShooterConstants.FLYWHEEL_LEFT_ID, Shooter.FLYWHEEL_RIGHT_CONFIG));
-        feeder = new PIDMotor(new PIDMotorIOSparkMax(IDs.CANBUSConstants.SHOOTER_CANBUS_ID,ShooterConstants.FEEDER_ID, Shooter.FEEDER_CONFIG));
-        hopper = new PIDMotor(new PIDMotorIOSparkMax(IDs.CANBUSConstants.SHOOTER_CANBUS_ID,ShooterConstants.HOPPER_ID, Shooter.HOPPER_CONFIG));
+        flywheelMotor = new PIDMotor(new PIDMotorIOSparkFlex(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.FLYWHEEL_ID, ShooterConfigs.FLYWHEEL_CONFIG));
+        hoodMotor = new PIDMotor(new PIDMotorIOSparkMax(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.HOOD_ID, ShooterConfigs.HOOD_CONFIG));
+        feederMotor = new PIDMotor(new PIDMotorIOSparkMax(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.FEEDER_ID, ShooterConfigs.FEEDER_CONFIG));
+        hopperMotor = new PIDMotor(new PIDMotorIOSparkMax(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.HOPPER_ID, ShooterConfigs.HOPPER_CONFIG));
 
-        RPMToHub = 0;
-        desiredRPM = 0;
+        toHubPosition = 0;
         shooterActive = false;
-    }
-
-    public void setDesiredRPM(double desiredRPM){
-        this.desiredRPM = desiredRPM;
-        Logger.recordOutput("Shooter/Desired RPM", desiredRPM);
     }
 
     //public void updateDesiredRPM(double distance){}
 
-    public boolean flywheelReady(){
-        return (desiredRPM != 0)
-            ? Math.abs(flywheelRight.getRPM() - desiredRPM) < desiredRPM * 0.15 
-            : Math.abs(flywheelRight.getRPM() - RPMToHub) < RPMToHub * 0.15;
+    public boolean flywheelReady() {
+        return (shooterActive && 
+            Math.abs(flywheelMotor.getRPM() - Shooter.Constants.SHOOTER_RPM) < Shooter.Constants.SHOOTER_RPM * 0.15);
     }
         
-    public void toggleShooter() {
+    public void toggleShooter(boolean shootingManual) {
         shooterActive = !shooterActive;
-        if (!shooterActive)
-            desiredRPM = 0;
+        this.shootingManual = shootingManual;
     }
 
-    public boolean isShooting(){
+    public boolean isShooting() {
         return shooterActive;
     }
 
     public void setFeeder(double speed) {
-        feeder.set(speed);
+        feederMotor.set(speed);
         Logger.recordOutput("Shooter/Feeder", speed);
     }
 
     public void setHopper(double speed) {
-        hopper.set(speed);
-        Logger.recordOutput("ShooterHopper", speed);
+        hopperMotor.set(speed);
+        Logger.recordOutput("Shooter/Hopper", speed);
+    }
+
+    public void updateDesiredRPM(double distance) {
+        toHubPosition = Shooter.Constants.HOOD_ANGLE_TABLE.get(distance);
+        Logger.recordOutput("Shooter/Aligned Position", toHubPosition);
     }
 
     public void stopMotors() {
-        flywheelRight.stopMotors();
-        flywheelLeft.stopMotors();
-        feeder.stopMotors();
-        hopper.stopMotors();
+        flywheelMotor.stopMotors();
+        hopperMotor.stopMotors();
+        feederMotor.stopMotors();
+        feederMotor.stopMotors();
     }
 
     @Override
     public void periodic() {
-        if (!shooterActive)
-        {
-            if (Math.abs(flywheelRight.getRPM()) < 200)
-            {
-                flywheelRight.set(0);
-            } 
-            else
-            {
-                flywheelRight.setVelocity(0, 0.00020352);
+        if (!shooterActive) {
+            if (Math.abs(flywheelMotor.getRPM()) < 200) {
+                flywheelMotor.set(0);
+            } else {
+                flywheelMotor.setVelocity(0, 0.00020352);
+            }
+            hoodMotor.setSetpoint(0, 0);
+        } else {
+            flywheelMotor.setVelocity(Shooter.Constants.SHOOTER_RPM, 0.00020352);
+            if(shootingManual) {
+                hoodMotor.setSetpoint(Shooter.Constants.MANUAL_SHOT_POSITION, 0);
+                Logger.recordOutput("Shooter/Desired Position", Shooter.Constants.MANUAL_SHOT_POSITION);
+            } else {
+                hoodMotor.setSetpoint(toHubPosition, 0);
+                Logger.recordOutput("Shooter/Desired Position", toHubPosition);
             }
         }
-        else if (desiredRPM != 0)
-        {
-            flywheelRight.setVelocity(desiredRPM, 0.00020352);
-        }
-        else
-        {
-            flywheelRight.setVelocity(RPMToHub, 0.00020352);
-        }
-        if (shooterActive && flywheelReady())
-        {
+
+        if (shooterActive && flywheelReady()) {
             setFeeder(0.95);
             setHopper(0.5);
-        }
-        else
-        {
+        } else {
             setFeeder(0);
             setHopper(0);
         }
-        Logger.recordOutput("RPM/Actual", flywheelRight.getRPM());
+
+        Logger.recordOutput("RPM/Actual", flywheelMotor.getRPM());
     }
 }

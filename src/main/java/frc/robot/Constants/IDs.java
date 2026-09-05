@@ -1,7 +1,7 @@
 package frc.robot.Constants;
 
 public class IDs {
-    public static final class DriveConstants {
+    public static final class DriveIDs {
         public static final int FL_DRIVE_ID = 11; //11
         public static final int BL_DRIVE_ID = 12; //12
         public static final int FR_DRIVE_ID = 13; //13
@@ -15,14 +15,14 @@ public class IDs {
         public static final int PIGEON_ID = 8;   //10
     }
 
-    public static final class ShooterConstants { //Copied IDs (Check Later)
-        public static final int FLYWHEEL_RIGHT_ID = 19;
-        public static final int FLYWHEEL_LEFT_ID = 20;
+    public static final class ShooterIDs { //Copied IDs (Check Later)
+        public static final int FLYWHEEL_ID = 19;
+        public static final int HOOD_ID = 20;
         public static final int HOPPER_ID = 23;
         public static final int FEEDER_ID = 24;
     }
 
-    public static final class CANBUSConstants {
+    public static final class CANBUSIDs {
         public static final int DRIVE_CANBUS_ID = 0;
         public static final int SHOOTER_CANBUS_ID = 0;
     }

@@ -7,7 +7,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 public final class Configs {
-    public static final class SwerveModule {
+    public static final class SwerveModuleConfigs {
         public static final SparkMaxConfig TURNING_CONFIG = new SparkMaxConfig();
         public static final SparkFlexConfig FL_CONFIG = new SparkFlexConfig();
         public static final SparkFlexConfig FR_CONFIG = new SparkFlexConfig();
@@ -38,7 +38,7 @@ public final class Configs {
             FL_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(false);
+                .inverted(true);
             FL_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -64,7 +64,7 @@ public final class Configs {
             BL_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
-                .inverted(false);
+                .inverted(true);
             BL_CONFIG.encoder
                 .positionConversionFactor(DRIVING_FACTOR) //meters
                 .velocityConversionFactor(DRIVING_FACTOR / 60.0);
@@ -89,10 +89,48 @@ public final class Configs {
         }
     }
 
-    public static final class Shooter {
-        public static final SparkFlexConfig FLYWHEEL_RIGHT_CONFIG = new SparkFlexConfig();
-        public static final SparkFlexConfig FLYWHEEL_LEFT_CONFIG = new SparkFlexConfig();
+    public static final class ShooterConfigs {
+        public static final SparkFlexConfig FLYWHEEL_CONFIG = new SparkFlexConfig();
+        public static final SparkMaxConfig HOOD_CONFIG = new SparkMaxConfig();
         public static final SparkMaxConfig FEEDER_CONFIG = new SparkMaxConfig();
         public static final SparkMaxConfig HOPPER_CONFIG = new SparkMaxConfig();
+
+        static {
+            //Retune closed loop controller
+            FLYWHEEL_CONFIG
+                .idleMode(IdleMode.kCoast)
+                .smartCurrentLimit(50)
+                .voltageCompensation(11)
+                .inverted(false); 
+            FLYWHEEL_CONFIG.closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .apply(new FeedForwardConfig().kV(.000176)) // ~1/MAX_RPM  .00020352
+                .p(0.0002) //.00078
+                .d(0.25)//d can't be neg
+                .outputRange(-1, 1);
+
+            //Retune closed loop controller
+            HOOD_CONFIG
+                .idleMode(IdleMode.kBrake)
+                .smartCurrentLimit(50);
+            HOOD_CONFIG.closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .p(.6)
+                .outputRange(-0.85, 0.85)
+                .maxMotion
+                .cruiseVelocity(1500)
+                .maxAcceleration(750)
+                .allowedProfileError(.2);
+
+            FEEDER_CONFIG
+                .idleMode(IdleMode.kBrake)
+                .inverted(false) //change?
+                .smartCurrentLimit(50);
+            HOPPER_CONFIG
+                .idleMode(IdleMode.kCoast)
+                .inverted(false) //change?
+                .smartCurrentLimit(50);
+        }
+
     }
 }
