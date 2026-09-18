@@ -7,7 +7,7 @@ import com.revrobotics.spark.SparkLowLevel;
 public interface PIDMotorIO {
     @AutoLog
     public class PIDMotorIOInputs {
-        public double RPM = 0.0;
+        public double velocity = 0.0;
         //add the rest
     }
 
@@ -17,13 +17,23 @@ public interface PIDMotorIO {
 
     default public void setSetpoint(double setpoint, SparkLowLevel.ControlType controlType, double FF){}
 
-    default public void setVelocity(double RPM, double FF){}
+    default public void setVelocity(double velocity, double FF){}
 
     default public void set(double speed){}
 
     default public void setVoltage(double voltage){}
 
+    default public void setEncoder(double setpoint){}
+
     default public void stopMotors(){}
 
     default public double getEncoder(){return 0;}
+
+    default public double getVelocity(){return 0;}
+
+    default public double getAppliedOutput(){return 0;}
+
+    default public double getBusVoltage(){return 0;}
+
+    default public double getOutputCurrent(){return 0;}
 }

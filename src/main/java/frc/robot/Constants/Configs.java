@@ -16,32 +16,29 @@ public final class Configs {
       
         static {
             //Module constants used to calculate conversion factors and feed forward gain.
-            double DRIVING_FACTOR = Drive.ModuleConstants.WHEEL_DIAMETER * Math.PI  / 3.56;
             double FF_VELOCITY = 1 / Drive.ModuleConstants.DRIVE_WHEEL_FREE_RPS;
-            double TURNING_FACTOR = 2 * Math.PI;
 
             TURNING_CONFIG
                 .idleMode(IdleMode.kBrake)
-                
                 .smartCurrentLimit(20);
             TURNING_CONFIG.absoluteEncoder
-                .inverted(true)
-                .positionConversionFactor(TURNING_FACTOR)
-                .velocityConversionFactor(TURNING_FACTOR / 60.0);
+                .inverted(true);
+                //.positionConversionFactor(TURNING_FACTOR)         <- deprecated, set through hardware manager
+                //.velocityConversionFactor(TURNING_FACTOR / 60.0); <- deprecated, set through hardware manager
             TURNING_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .pid(1,0,0)
                 .outputRange(-1, 1)
-                .positionWrappingEnabled(true)
-                .positionWrappingInputRange(0, TURNING_FACTOR);
+                .positionWrappingEnabled(true);
+                //.positionWrappingInputRange(0, TURNING_FACTOR); <- deprecated, set through hardware manager
 
             FL_CONFIG
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
                 .inverted(true);
-            FL_CONFIG.encoder
-                .positionConversionFactor(DRIVING_FACTOR) //meters
-                .velocityConversionFactor(DRIVING_FACTOR / 60.0);
+            //FL_CONFIG.encoder
+                //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
+                //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             FL_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .pid(0.04, 0,0)
@@ -52,9 +49,9 @@ public final class Configs {
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
                 .inverted(false);
-            FR_CONFIG.encoder
-                .positionConversionFactor(DRIVING_FACTOR) //meters
-                .velocityConversionFactor(DRIVING_FACTOR / 60.0);
+            //FR_CONFIG.encoder.
+                //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
+                //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             FR_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .pid(0.04, 0,0)
@@ -65,9 +62,9 @@ public final class Configs {
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
                 .inverted(true);
-            BL_CONFIG.encoder
-                .positionConversionFactor(DRIVING_FACTOR) //meters
-                .velocityConversionFactor(DRIVING_FACTOR / 60.0);
+            //BL_CONFIG.encoder
+                //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
+                //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             BL_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .pid(0.04, 0,0)
@@ -78,9 +75,9 @@ public final class Configs {
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(50)
                 .inverted(false);
-            BR_CONFIG.encoder
-                .positionConversionFactor(DRIVING_FACTOR) //meters
-                .velocityConversionFactor(DRIVING_FACTOR / 60.0);
+            //BR_CONFIG.encoder
+                //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
+                //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             BR_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .pid(0.04, 0,0)

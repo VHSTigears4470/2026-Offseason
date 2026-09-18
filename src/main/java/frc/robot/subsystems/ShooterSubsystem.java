@@ -4,8 +4,8 @@ import org.littletonrobotics.junction.Logger;
 
 import org.wpilib.command2.SubsystemBase;
 
-import frc.robot.Constants.IDs.CANBUSIDs;
 import frc.robot.Constants.IDs.ShooterIDs;
+import frc.robot.Constants.CAN;
 import frc.robot.Constants.Configs.ShooterConfigs;
 import frc.robot.Constants.Shooter;
 import frc.robot.components.PIDMotor;
@@ -23,10 +23,10 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean shootingManual;
 
     public ShooterSubsystem() {
-        flywheelMotor = new PIDMotor(new PIDMotorIOSparkFlex(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.FLYWHEEL_ID, ShooterConfigs.FLYWHEEL_CONFIG));
-        hoodMotor = new PIDMotor(new PIDMotorIOSparkMax(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.HOOD_ID, ShooterConfigs.HOOD_CONFIG));
-        feederMotor = new PIDMotor(new PIDMotorIOSparkMax(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.FEEDER_ID, ShooterConfigs.FEEDER_CONFIG));
-        hopperMotor = new PIDMotor(new PIDMotorIOSparkMax(CANBUSIDs.SHOOTER_CANBUS_ID, ShooterIDs.HOPPER_ID, ShooterConfigs.HOPPER_CONFIG));
+        flywheelMotor = new PIDMotor(new PIDMotorIOSparkFlex(CAN.Constants.ShooterCAN, ShooterIDs.FLYWHEEL_ID, ShooterConfigs.FLYWHEEL_CONFIG, 1, 1));
+        hoodMotor = new PIDMotor(new PIDMotorIOSparkMax(CAN.Constants.ShooterCAN, ShooterIDs.HOOD_ID, ShooterConfigs.HOOD_CONFIG, 1, 1));
+        feederMotor = new PIDMotor(new PIDMotorIOSparkMax(CAN.Constants.ShooterCAN, ShooterIDs.FEEDER_ID, ShooterConfigs.FEEDER_CONFIG, 1, 1));
+        hopperMotor = new PIDMotor(new PIDMotorIOSparkMax(CAN.Constants.ShooterCAN, ShooterIDs.HOPPER_ID, ShooterConfigs.HOPPER_CONFIG, 1, 1));
 
         toHubPosition = 0;
         shooterActive = false;
@@ -36,7 +36,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public boolean flywheelReady() {
         return (shooterActive && 
-            Math.abs(flywheelMotor.getRPM() - Shooter.Constants.SHOOTER_RPM) < Shooter.Constants.SHOOTER_RPM * 0.15);
+            Math.abs(flywheelMotor.getVelocity() - Shooter.Constants.SHOOTER_RPM) < Shooter.Constants.SHOOTER_RPM * 0.15);
     }
         
     public void toggleShooter(boolean shootingManual) {
@@ -73,7 +73,7 @@ public class ShooterSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         if (!shooterActive) {
-            if (Math.abs(flywheelMotor.getRPM()) < 200) {
+            if (Math.abs(flywheelMotor.getVelocity()) < 200) {
                 flywheelMotor.set(0);
             } else {
                 flywheelMotor.setVelocity(0, 0.00020352);
@@ -98,6 +98,6 @@ public class ShooterSubsystem extends SubsystemBase {
             setHopper(0);
         }
 
-        Logger.recordOutput("RPM/Actual", flywheelMotor.getRPM());
+        Logger.recordOutput("RPM/Actual", flywheelMotor.getVelocity());
     }
 }
