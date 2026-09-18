@@ -26,9 +26,9 @@ public class PIDMotor extends SubsystemBase {
     Logger.recordOutput("PIDMotor/Setpoint", setpoint);
   }
 
-  public void setVelocity(double RPM, double FF) {
-    io.setVelocity(RPM, FF);
-    Logger.recordOutput("PIDMotor/SetVelocity", RPM);
+  public void setVelocity(double velocity, double FF) {
+    io.setVelocity(velocity, FF);
+    Logger.recordOutput("PIDMotor/SetVelocity", velocity);
   }
 
   public void setVoltage(double voltage) {
@@ -41,8 +41,9 @@ public class PIDMotor extends SubsystemBase {
     Logger.recordOutput("PIDMotor/Set", speed);
   }
 
-  public double getRPM() {
-    return inputs.RPM;
+  public void setEncoder(double setpoint) {
+    io.setEncoder(setpoint);
+    Logger.recordOutput("PIDMotor/SetEncoder", setpoint);
   }
 
   public void stopMotors() {
@@ -56,5 +57,21 @@ public class PIDMotor extends SubsystemBase {
 
   public double getEncoder() {
     return io.getEncoder();
+  }
+
+  public double getVelocity() {
+    return io.getVelocity();
+  }
+
+  public double getAppliedOutput(){
+      return io.getAppliedOutput();
+  }
+
+  public double getBusVoltage(){
+      return io.getBusVoltage();
+  }
+
+  public double getOutputCurrent(){
+      return io.getOutputCurrent();
   }
 }

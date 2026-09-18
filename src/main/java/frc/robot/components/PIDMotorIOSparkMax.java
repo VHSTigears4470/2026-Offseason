@@ -1,12 +1,13 @@
 package frc.robot.components;
 
+import org.wpilib.hardware.bus.CANPort;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel;
-import com.revrobotics.spark.SparkLowLevel.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -16,28 +17,33 @@ public class PIDMotorIOSparkMax implements PIDMotorIO {
     private SparkMax motor = null;
     private RelativeEncoder encoder = null;
     private SparkClosedLoopController controller = null;
+    private double encoderConversionFactor = 1;
+    private double velocityConversionFactor = 1;
 
-    public PIDMotorIOSparkMax(int busID, int ID, SparkMaxConfig config) {
+
+    public PIDMotorIOSparkMax(CANPort busID, int ID, SparkMaxConfig config, double encoderConversionFactor, double velocityConversionFactor) {
         motor = new SparkMax(busID, ID, MotorType.kBrushless);
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        this.encoderConversionFactor = encoderConversionFactor;
+        this.velocityConversionFactor = velocityConversionFactor;
         encoder = motor.getEncoder();
         controller = motor.getClosedLoopController();
     }
 
    @Override public void updateInputs(PIDMotorIOInputsAutoLogged inputs) {
-        inputs.RPM = encoder.getVelocity().get();
+        inputs.velocity = getVelocity();
     }
 
     @Override public void resetEncoder() {
         encoder.setPosition(0);
     }
 
-    @Override public void setSetpoint(double setpoint, SparkLowLevel.ControlType controlType, double FF) {
-        controller.setSetpoint(setpoint, controlType, ClosedLoopSlot.kSlot0, FF);
+   @Override public void setSetpoint(double setpoint, SparkLowLevel.ControlType controlType, double FF) {
+        controller.setSetpoint(setpoint / encoderConversionFactor, controlType, ClosedLoopSlot.kSlot0, FF);
     }
 
-    @Override public void setVelocity(double RPM, double FF) {
-        controller.setSetpoint(RPM, ControlType.kVelocity, ClosedLoopSlot.kSlot0, FF);
+    @Override public void setVelocity(double velocity, double FF) {
+        controller.setSetpoint(velocity / velocityConversionFactor, SparkLowLevel.ControlType.kVelocity, ClosedLoopSlot.kSlot0, FF);
     }
 
     @Override public void set(double speed){
@@ -48,11 +54,31 @@ public class PIDMotorIOSparkMax implements PIDMotorIO {
         motor.setVoltage(voltage);
     }
 
+    @Override public void setEncoder(double position) {
+        encoder.setPosition(position / encoderConversionFactor);
+    }
+
     @Override public void stopMotors(){
         motor.stopMotor();
     }
 
     @Override public double getEncoder(){
-        return encoder.getPosition().get();
+        return encoder.getPosition().get() * encoderConversionFactor;
+    }
+
+    @Override public double getVelocity(){
+        return encoder.getVelocity().get() * velocityConversionFactor;
+    }
+
+     @Override public double getAppliedOutput(){
+        return motor.getAppliedOutput().get();
+    }
+
+    @Override public double getBusVoltage(){
+        return motor.getBusVoltage().get();
+    }
+
+    @Override public double getOutputCurrent(){
+        return motor.getOutputCurrent().get();
     }
 }

@@ -63,5 +63,8 @@ public final class Drive {
                                                           //(bevel * spur) /(pinion * bevel_secondary)   
         public static final double DRIVE_MOTOR_FREE_RPS = 5676.0 / 60.0;
         public static final double DRIVE_WHEEL_FREE_RPS = (DRIVE_MOTOR_FREE_RPS * WHEEL_CIRCUMFERENCE) / DRIVE_MOTOR_REDUCTION;
+
+        public static final double DRIVING_FACTOR = Drive.ModuleConstants.WHEEL_DIAMETER * Math.PI  / 3.56;
+        public static final double TURNING_FACTOR = 2 * Math.PI;
     }
 }
