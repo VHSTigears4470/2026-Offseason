@@ -2,6 +2,7 @@ package frc.robot.components;
 
 import org.wpilib.hardware.bus.CANPort;
 
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -14,6 +15,7 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 public class PIDMotorIOSparkFlex implements PIDMotorIO {
     private SparkFlex motor = null;
     private RelativeEncoder encoder = null;
+    private AbsoluteEncoder encoderAbs = null;
     private SparkClosedLoopController controller = null;
     private double encoderConversionFactor = 1;
     private double velocityConversionFactor = 1;
@@ -24,6 +26,7 @@ public class PIDMotorIOSparkFlex implements PIDMotorIO {
         this.encoderConversionFactor = encoderConversionFactor;
         this.velocityConversionFactor = velocityConversionFactor;
         encoder = motor.getEncoder();
+        encoderAbs = motor.getAbsoluteEncoder();
         controller = motor.getClosedLoopController();
     }
 

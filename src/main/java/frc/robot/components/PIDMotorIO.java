@@ -29,6 +29,8 @@ public interface PIDMotorIO {
 
     default public double getEncoder(){return 0;}
 
+    default public double getEncoderAbs(){return 0;}
+
     default public double getVelocity(){return 0;}
 
     default public double getAppliedOutput(){return 0;}

@@ -59,6 +59,10 @@ public class PIDMotor extends SubsystemBase {
     return io.getEncoder();
   }
 
+  public double getEncoderAbs() {
+    return io.getEncoderAbs();
+  }
+
   public double getVelocity() {
     return io.getVelocity();
   }

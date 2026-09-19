@@ -29,7 +29,7 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
     inputs.driveAppliedVolts = driveMotor.getAppliedOutput() * driveMotor.getBusVoltage();
     inputs.driveCurrentAmps = driveMotor.getOutputCurrent();
 
-    inputs.turnPositionRad = turnMotor.getEncoder() - chassisAngularOffset;
+    inputs.turnPositionRad = turnMotor.getEncoderAbs() - chassisAngularOffset;
     inputs.turnVelocityRadPerSec = turnMotor.getVelocity();
     inputs.turnAppliedVolts = turnMotor.getAppliedOutput() * turnMotor.getBusVoltage();
     inputs.turnCurrentAmps = turnMotor.getOutputCurrent();
