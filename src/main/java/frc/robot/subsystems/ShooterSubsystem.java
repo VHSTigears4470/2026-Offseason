@@ -4,6 +4,8 @@ import org.littletonrobotics.junction.Logger;
 
 import org.wpilib.command2.SubsystemBase;
 
+import com.revrobotics.spark.SparkLowLevel.ControlType;
+
 import frc.robot.Constants.IDs.ShooterIDs;
 import frc.robot.Constants.CAN;
 import frc.robot.Constants.Configs.ShooterConfigs;
@@ -78,14 +80,14 @@ public class ShooterSubsystem extends SubsystemBase {
             } else {
                 flywheelMotor.setVelocity(0, 0.00020352);
             }
-            hoodMotor.setSetpoint(0, 0);
+            hoodMotor.setSetpoint(0, ControlType.kMAXMotionPositionControl, 0);
         } else {
             flywheelMotor.setVelocity(Shooter.Constants.SHOOTER_RPM, 0.00020352);
             if(shootingManual) {
-                hoodMotor.setSetpoint(Shooter.Constants.MANUAL_SHOT_POSITION, 0);
+                hoodMotor.setSetpoint(Shooter.Constants.MANUAL_SHOT_POSITION, ControlType.kMAXMotionPositionControl, 0);
                 Logger.recordOutput("Shooter/Desired Position", Shooter.Constants.MANUAL_SHOT_POSITION);
             } else {
-                hoodMotor.setSetpoint(toHubPosition, 0);
+                hoodMotor.setSetpoint(toHubPosition, ControlType.kMAXMotionPositionControl, 0);
                 Logger.recordOutput("Shooter/Desired Position", toHubPosition);
             }
         }

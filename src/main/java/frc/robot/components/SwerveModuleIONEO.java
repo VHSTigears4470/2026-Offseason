@@ -1,5 +1,6 @@
 package frc.robot.components;
 
+import com.revrobotics.spark.SparkLowLevel.ControlType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -46,7 +47,7 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
     
     //Command driving and turning SPARKS toward their respective setpoints.
     driveMotor.setVelocity(correctedDesiredVelocity.velocity,  0);
-    turnMotor.setSetpoint(correctedDesiredVelocity.angle.getRadians(), 0);
+    turnMotor.setSetpoint(correctedDesiredVelocity.angle.getRadians(), ControlType.kPosition, 0);
   }
 
   @Override public void resetDriveEncoder() {

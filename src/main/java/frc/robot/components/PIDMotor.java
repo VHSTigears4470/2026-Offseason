@@ -3,6 +3,7 @@ package frc.robot.components;
 import org.wpilib.command2.SubsystemBase;
 
 import com.revrobotics.spark.SparkLowLevel;
+import com.revrobotics.spark.SparkLowLevel.ControlType;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -21,8 +22,8 @@ public class PIDMotor extends SubsystemBase {
     io.updateInputs(inputs);
   }
 
-  public void setSetpoint(double setpoint, double FF) {
-    io.setSetpoint(setpoint, SparkLowLevel.ControlType.kMAXMotionPositionControl, FF);
+  public void setSetpoint(double setpoint, ControlType controlType, double FF) {
+    io.setSetpoint(setpoint, controlType, FF);
     Logger.recordOutput("PIDMotor/Setpoint", setpoint);
   }
 

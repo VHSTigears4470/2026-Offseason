@@ -22,12 +22,12 @@ public class PIDMotorIOSparkFlex implements PIDMotorIO {
 
     public PIDMotorIOSparkFlex(CANPort busID, int ID, SparkFlexConfig config, double encoderConversionFactor, double velocityConversionFactor) {
         motor = new SparkFlex(busID, ID, SparkLowLevel.MotorType.kBrushless);
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         this.encoderConversionFactor = encoderConversionFactor;
         this.velocityConversionFactor = velocityConversionFactor;
         encoder = motor.getEncoder();
         encoderAbs = motor.getAbsoluteEncoder();
         controller = motor.getClosedLoopController();
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
    @Override public void updateInputs(PIDMotorIOInputsAutoLogged inputs) {
