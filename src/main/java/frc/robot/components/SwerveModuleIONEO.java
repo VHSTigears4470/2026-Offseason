@@ -43,11 +43,11 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
     correctedDesiredVelocity.angle = desiredVelocity.angle.plus(Rotation2d.fromRadians(chassisAngularOffset));
 
     //Optimize the reference state as to not turn more than 90 degrees.
-    correctedDesiredVelocity = correctedDesiredVelocity.optimize(new Rotation2d(turnMotor.getEncoder()));
+    correctedDesiredVelocity = correctedDesiredVelocity.optimize(new Rotation2d(turnMotor.getEncoderAbs()));
     
     //Command driving and turning SPARKS toward their respective setpoints.
     driveMotor.setVelocity(correctedDesiredVelocity.velocity,  0);
-    turnMotor.setSetpoint(correctedDesiredVelocity.angle.getRadians(), ControlType.kPosition, 0);
+    turnMotor.setSetpoint(correctedDesiredVelocity.angle.getRadians(), ControlType.kPosition, 0.15);
   }
 
   @Override public void resetDriveEncoder() {

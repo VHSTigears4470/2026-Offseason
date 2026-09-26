@@ -117,10 +117,10 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, String statusName) {
-        double multiplier = 0.5; 
+        double multiplier = 0.3; 
         double xSpeedDelivered = xSpeed * Drive.Constants.MAX_METERS_PER_SECOND * multiplier;
         double ySpeedDelivered = ySpeed * Drive.Constants.MAX_METERS_PER_SECOND * multiplier;
-        double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * multiplier;
+        double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * 0.5;
 
         ChassisVelocities chassisVelocities = new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotDelivered);
         if(fieldRelative) {

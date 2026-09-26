@@ -14,6 +14,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 
+import com.revrobotics.util.StatusLogger;
+
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
  * the TimedRobot documentation. If you change the name of this class or the package after creating
@@ -29,6 +31,7 @@ public class Robot extends LoggedRobot  {
    * initialization code.
    */
   public Robot() {
+    StatusLogger.disableAutoLogging();
     Logger.recordMetadata("ProjectName", "2026-Offseason"); // Set a metadata value
     Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
