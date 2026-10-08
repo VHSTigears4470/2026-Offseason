@@ -12,8 +12,9 @@ import org.wpilib.math.spline.SplineHelper;
 // import choreo.trajectory.Trajectory;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
+import org.wpilib.system.Timer;
 import org.wpilib.tunable.Selectable;
-import org.wpilib.tunable.TunableRegistry;
+import org.wpilib.tunable.Tunables;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -53,14 +54,14 @@ public class RobotContainer {
       
       if (Operating.Constants.USING_AUTO) {
         autoChooser = AutoBuilder.buildAutoChooser();
-        autoChooser.add("meter", new PathPlannerAuto("meter"));
-        // TunableRegistry.publish("Auto", autoChooser);
+        autoChooser.add("2-Meters", new PathPlannerAuto("2-Meters"));
+        Tunables.publish("Auto Path", autoChooser);
       } else {
         autoChooser = null;
       }
 
       configureBindings();
-      //CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand()); // changed after wpilib alpha 5 removing .schedule() on cmd v2
+      CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand()); // changed after wpilib alpha 5 removing .schedule() on cmd v2
    }
 
   public void initSubystems() {
@@ -99,10 +100,19 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() { 
       if (Operating.Constants.USING_AUTO) {
-        return autoChooser.getSelected();
+        //Logger.recordOutput("Auto/Auto Path", autoChooser.getSelected().getName());
+        //return autoChooser.getSelected();
+        PathPlannerPath path;
+        try {
+           path = PathPlannerPath.fromPathFile("2-Meters");
+        } catch (Exception e) {
+           path = null;
+        }
+        
+        return AutoBuilder.followPath(path);
       }
-
       return null;
+
     }
 
     private void configureBindings() {

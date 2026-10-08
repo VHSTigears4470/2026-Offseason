@@ -136,14 +136,14 @@ public class DriveSubsystem extends SubsystemBase {
             AutoBuilder.configure(
                 this::getOdometry,   // Supplier of current robot pose *getPose
                 this::resetOdometry,         // Consumer for seeding pose against auto
-                this::getRobotRelativeSVelocities, // Supplier of current robot speeds
+                this::getRobotRelativeVelocities, // Supplier of current robot speeds
                 // Consumer of ChassisSpeeds and feedforwards to drive the robot
-                (speeds, ff) -> this.driveRobotRelative(speeds),
+                this::driveRobotRelative,
                 new PPHolonomicDriveController(
                     // PID constants for translation
                     new PIDConstants(.000125, 0, 0), //Change(?)
                     // PID constants for rotation
-                    new PIDConstants(3, 0, 0) //Change(?)
+                    new PIDConstants(1, 0, 0) //Change(?)
                 ),
                 config,
                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case
@@ -186,11 +186,12 @@ public class DriveSubsystem extends SubsystemBase {
 
     public void driveRobotRelative(ChassisVelocities relativeVelocities) {
         ChassisVelocities targetSpeeds = relativeVelocities.discretize(0.02);
-        SwerveModuleVelocity[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(targetSpeeds);
-        frontLeft.setDesiredVelocity(targetStates[0]);
-        frontRight.setDesiredVelocity(targetStates[1]);
-        backLeft.setDesiredVelocity(targetStates[2]);
-        backRight.setDesiredVelocity(targetStates[3]);
+        SwerveModuleVelocity[] SwerveModuleVelocities = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(targetSpeeds);
+        desiredStates = SwerveModuleVelocities;
+        frontLeft.setDesiredVelocity(SwerveModuleVelocities[0]);
+        frontRight.setDesiredVelocity(SwerveModuleVelocities[1]);
+        backLeft.setDesiredVelocity(SwerveModuleVelocities[2]);
+        backRight.setDesiredVelocity(SwerveModuleVelocities[3]);
     }
 
     public SwerveModuleVelocity[] getSwerveModuleVelocities() {
@@ -228,7 +229,7 @@ public class DriveSubsystem extends SubsystemBase {
         return poseEstimator.getEstimatedPosition();
     }
 
-    public ChassisVelocities getRobotRelativeSVelocities() {
+    public ChassisVelocities getRobotRelativeVelocities() {
         return Drive.Constants.DRIVE_KINEMATICS.toChassisVelocities(
             frontLeft.getVelocity(),
             frontRight.getVelocity(),
