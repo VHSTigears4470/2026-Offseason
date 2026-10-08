@@ -47,7 +47,7 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
     
     //Command driving and turning SPARKS toward their respective setpoints.
     driveMotor.setVelocity(correctedDesiredVelocity.velocity,  0);
-    turnMotor.setSetpoint(correctedDesiredVelocity.angle.getRadians(), ControlType.kPosition, 0.15);
+    turnMotor.setSetpoint(correctedDesiredVelocity.angle.getRadians(), ControlType.kPosition, 0);
   }
 
   @Override public void resetDriveEncoder() {

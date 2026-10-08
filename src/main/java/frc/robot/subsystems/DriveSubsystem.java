@@ -8,6 +8,10 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import com.limelightvision.Limelight;
 import com.limelightvision.PoseEstimate;
 import com.limelightvision.PoseEstimateType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 // import choreo.trajectory.SwerveSample;
 // import org.wpilib.hardware.hal.FRCNetComm.tInstances;
@@ -25,6 +29,10 @@ import org.wpilib.math.kinematics.SwerveModuleVelocity;
 import org.wpilib.math.util.Units;
 import org.wpilib.system.RobotController;
 import org.wpilib.command2.SubsystemBase;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.DriverStation;
+import org.wpilib.driverstation.MatchState;
+
 import frc.robot.components.SwerveModule;
 import frc.robot.components.SwerveModuleIONEO;
 import frc.robot.Robot;
@@ -112,9 +120,42 @@ public class DriveSubsystem extends SubsystemBase {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         // TODO: FIX     
         // HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
-
+        configureAutoBuilder();
         limelight = new Limelight("limelight-one");
     }
+
+    private void configureAutoBuilder() {
+        RobotConfig config;
+        try {
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        try {
+            AutoBuilder.configure(
+                this::getOdometry,   // Supplier of current robot pose *getPose
+                this::resetOdometry,         // Consumer for seeding pose against auto
+                this::getRobotRelativeSVelocities, // Supplier of current robot speeds
+                // Consumer of ChassisSpeeds and feedforwards to drive the robot
+                (speeds, ff) -> this.driveRobotRelative(speeds),
+                new PPHolonomicDriveController(
+                    // PID constants for translation
+                    new PIDConstants(.000125, 0, 0), //Change(?)
+                    // PID constants for rotation
+                    new PIDConstants(3, 0, 0) //Change(?)
+                ),
+                config,
+                // Assume the path needs to be flipped for Red vs Blue, this is normally the case
+                () -> MatchState.getAlliance().orElse(Alliance.BLUE) == Alliance.RED,
+                this // Subsystem for requirements
+            );
+        } catch (Exception ex) {
+            System.out.println("Failed to load PathPlanner config and configure AutoBuilder"+ ex.getStackTrace());
+            return;
+        }
+    }
+    
 
     public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, String statusName) {
         double multiplier = 0.3; 

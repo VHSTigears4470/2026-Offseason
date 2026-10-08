@@ -43,7 +43,7 @@ public class PIDMotorIOSparkFlex implements PIDMotorIO {
     }
 
     @Override public void setVelocity(double velocity, double FF) {
-        controller.setSetpoint(velocity / encoderConversionFactor, SparkLowLevel.ControlType.kVelocity, ClosedLoopSlot.kSlot0, FF);
+        controller.setSetpoint(velocity / velocityConversionFactor, SparkLowLevel.ControlType.kVelocity, ClosedLoopSlot.kSlot0, FF);
     }
 
     @Override public void set(double speed){
@@ -84,5 +84,9 @@ public class PIDMotorIOSparkFlex implements PIDMotorIO {
 
     @Override public double getOutputCurrent(){
         return motor.getOutputCurrent().get();
+    }
+
+    @Override public double getMotorTemperature() {
+        return motor.getMotorTemperature().get();
     }
 }

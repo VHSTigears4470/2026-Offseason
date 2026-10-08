@@ -38,4 +38,6 @@ public interface PIDMotorIO {
     default public double getBusVoltage(){return 0;}
 
     default public double getOutputCurrent(){return 0;}
+
+    default public double getMotorTemperature(){return 0;}
 }

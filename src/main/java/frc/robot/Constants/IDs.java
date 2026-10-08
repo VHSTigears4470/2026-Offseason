@@ -16,10 +16,15 @@ public class IDs {
     }
 
     public static final class ShooterIDs { //Copied IDs (Check Later)
-        public static final int FLYWHEEL_ID = 19;
-        public static final int HOOD_ID = 20;
-        public static final int HOPPER_ID = 23;
-        public static final int FEEDER_ID = 24;
+        public static final int FLYWHEEL_ID = 20;
+        public static final int HOOD_ID = 23;
+        public static final int INDEXER_ID = 21;
+        public static final int FEEDER_ID = 22;
+    }
+
+    public static final class IntakeIDs {
+        public static final int INTAKE_ID = 5;
+        public static final int DROP_ID = 24;
     }
 
     public static final class CANBUSIDs {

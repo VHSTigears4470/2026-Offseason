@@ -1,11 +1,9 @@
 package frc.robot.components;
 
+import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.SubsystemBase;
 
-import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkLowLevel.ControlType;
-
-import org.littletonrobotics.junction.Logger;
 
 
 public class PIDMotor extends SubsystemBase {
@@ -78,5 +76,9 @@ public class PIDMotor extends SubsystemBase {
 
   public double getOutputCurrent(){
       return io.getOutputCurrent();
+  }
+
+  public double getMotorTemperature() {
+    return io.getMotorTemperature();
   }
 }
