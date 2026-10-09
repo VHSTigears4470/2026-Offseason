@@ -5,104 +5,78 @@
 package frc.robot;
 
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.math.spline.SplineHelper;
+// import choreo.auto.AutoFactory;
+// import choreo.auto.AutoRoutine;
+// import choreo.auto.AutoTrajectory;
+// import choreo.trajectory.Trajectory;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.math.util.Units;
+import org.wpilib.system.Timer;
+import org.wpilib.tunable.Selectable;
+import org.wpilib.tunable.Tunables;
 
-import choreo.auto.AutoFactory;
-import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
-import choreo.trajectory.Trajectory;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+
+import org.wpilib.command2.Command;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.ParallelCommandGroup;
+import org.wpilib.command2.RunCommand;
+import org.wpilib.command2.button.CommandGamepad;
+import org.wpilib.driverstation.XboxController;
+import org.wpilib.command2.CommandScheduler;
+
+
 import frc.robot.Constants.OI;
 import frc.robot.Constants.Operating;
-import frc.robot.Constants.Operating.Constants;
+import frc.robot.Constants.Shooter;
+import frc.robot.commands.IntakeRun;
+import frc.robot.commands.IntakeToggle;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.GroundIntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
 public class RobotContainer {
-  private final CommandXboxController driverController = new CommandXboxController(OI.Constants.DRIVE_CONTROLLER_PORT);
+  private final CommandGamepad driverController = new CommandGamepad(OI.Constants.DRIVE_CONTROLLER_PORT);
 
-  private DriveSubsystem driveSub;
+  private final Selectable <Command> autoChooser;
 
-  private final AutoFactory autoFactory;
-
-  private final AutoRoutine myTrajectoryMeter;
-
-  private final AutoRoutine myTrajectory180;
+  private DriveSubsystem driveSub = null;
+  private ShooterSubsystem shooterSub = null;
+  private GroundIntakeSubsystem intakeSub = null;
 
   public RobotContainer() {
-    driveSub = new DriveSubsystem();
-    autoFactory = new AutoFactory( 
-        //Switch to odometry methods if needed?
-        driveSub::getOdometry, // A function that returns the current robot pose - might have to implement limelight first
-        driveSub::resetOdometry, // A function that resets the current robot pose to the provided Pose2d     
-        driveSub::followTrajectory, // The drive subsystem trajectory follower 
-        true, // If alliance flipping should be enabled 
-        driveSub // The drive subsystem
-      );
       initSubystems();
+      
+      if (Operating.Constants.USING_AUTO) {
+        autoChooser = AutoBuilder.buildAutoChooser();
+        autoChooser.add("Shoot at Hub", new PathPlannerAuto("Shoot at Hub"));
+        autoChooser.setDefault("None");
+        Tunables.publish("Auto Path", autoChooser);
+      } else {
+        autoChooser = null;
+      }
+
       configureBindings();
-
-      myTrajectoryMeter = myTrajectoryMeterAuto();
-      myTrajectory180 = myTrajectory180Auto();
-  }
-
-  public AutoRoutine myTrajectoryMeterAuto() {
-    if (autoFactory == null) {
-      System.out.println("AutoFactory is null");
-      return null;
-    }
-    
-    AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward");
-
-    AutoTrajectory trajectory = autoRoutine.trajectory("Meter.traj");
-
-    autoRoutine.active().onTrue(
-            Commands.sequence(
-                trajectory.resetOdometry(),
-                trajectory.cmd()
-            )
-        );
-
-    return autoRoutine;
-
-  }
-
-  public AutoRoutine myTrajectory180Auto() {
-    if (autoFactory == null) {
-      return null;
-    }
-    AutoRoutine autoRoutine = autoFactory.newRoutine("Move Forward and Rotate 180");
-
-    AutoTrajectory trajectory = autoRoutine.trajectory("Rotation180");
-
-    autoRoutine.active().onTrue(
-            Commands.sequence(
-                trajectory.resetOdometry(),
-                trajectory.cmd()
-            )
-        );
-
-    return autoRoutine;
-
-  }
+      CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand()); // changed after wpilib alpha 5 removing .schedule() on cmd v2
+   }
 
   public void initSubystems() {
-    if(Operating.Constants.USING_DRIVE)
-    LimelightHelpers.setPipelineIndex("limelight-one", 1);
-      LimelightHelpers.setupPortForwardingUSB(0);
-
-      // driveSub = new DriveSubsystem();
-      driverController.y().onTrue(myTrajectoryMeterAuto().cmd());
+    if(Operating.Constants.USING_DRIVE) {
+      driveSub = new DriveSubsystem();
       driveSub.setDefaultCommand(new RunCommand(
           () -> {
             double y = OI.Constants.DRIVER_AXIS_Y_INVERTED * MathUtil
-                .applyDeadband(driverController.getRawAxis(OI.Constants.DRIVER_AXIS_Y), OI.Constants.DRIVE_DEADBAND);
+                .applyDeadband(driverController.getAxis(OI.Constants.DRIVER_AXIS_Y), OI.Constants.DRIVE_DEADBAND);
             double x = OI.Constants.DRIVER_AXIS_X_INVERTED * MathUtil
-                .applyDeadband(driverController.getRawAxis(OI.Constants.DRIVER_AXIS_X), OI.Constants.DRIVE_DEADBAND);
+                .applyDeadband(driverController.getAxis(OI.Constants.DRIVER_AXIS_X), OI.Constants.DRIVE_DEADBAND);
             double rot = OI.Constants.DRIVER_AXIS_ROT_INVERTED * MathUtil
-                .applyDeadband(driverController.getRawAxis(OI.Constants.DRIVER_AXIS_ROT), OI.Constants.DRIVE_DEADBAND);
+                .applyDeadband(driverController.getAxis(OI.Constants.DRIVER_AXIS_ROT), OI.Constants.DRIVE_DEADBAND);
 
             // Add logging for buttons
 
@@ -116,16 +90,69 @@ public class RobotContainer {
             driveSub.drive(y, x, rot, true, "Default / Field Oriented");
           },
           driveSub));
-    }
-
-    public Command getAutonomousCommand() 
-    {
-      if (myTrajectoryMeter == null) { //myTrajectory180 == null) {
-        return Commands.none();
       }
-      return myTrajectoryMeter.cmd();
-      //return myTrajectory180.cmd();    
+      if(Operating.Constants.USING_INTAKE) {
+        intakeSub = new GroundIntakeSubsystem();
+        NamedCommands.registerCommand("Toggle Intake Arm", new IntakeToggle(intakeSub));
+        NamedCommands.registerCommand("Toggle Intake Run", new IntakeRun(intakeSub));
+      }
+       if(Operating.Constants.USING_SHOOTER) {
+        shooterSub = new ShooterSubsystem();
+        NamedCommands.registerCommand("Toggle Shoot Hub", new InstantCommand(() -> {shooterSub.toggleShooter(Shooter.Constants.HUB_RPM, Shooter.Constants.HUB_POSITION);}));
+        NamedCommands.registerCommand("Toggle Shoot Side", new InstantCommand(() -> {shooterSub.toggleShooter(-3000, -8.5);}));
+      }
+    }
+  
+
+    public Command getAutonomousCommand() { 
+      if (Operating.Constants.USING_AUTO) {
+        //Logger.recordOutput("Auto/Auto Path", autoChooser.getSelected().getName());
+        return autoChooser.getSelected();
+      }
+      return null;
     }
 
-    private void configureBindings() {}
+    private void configureBindings() {
+      //0 - motor testing
+      //default - Competition Controller Scheme
+      int preset = 1; 
+      switch (preset) {
+        case 0:
+          if(Operating.Constants.USING_INTAKE) {
+            driverController.button(XboxController.Button.X.value).onTrue(new IntakeRun(intakeSub));
+            driverController.button(XboxController.Button.A.value).onTrue(new IntakeToggle(intakeSub));
+            driverController.button(XboxController.Button.LEFT_BUMPER.value).onTrue(new InstantCommand(() -> {intakeSub.extend();}));
+            driverController.button(XboxController.Button.RIGHT_BUMPER.value).onTrue(new InstantCommand(() -> {intakeSub.retract();}));
+          }
+          if(Operating.Constants.USING_SHOOTER) {
+            //might be overriden by periodic()
+            driverController.dpadLeft().onTrue(new InstantCommand(() -> {shooterSub.setFeeder(11);}));
+            driverController.dpadRight().onTrue(new InstantCommand(() -> {shooterSub.setFeeder(-11);}));
+            driverController.dpadDown().onTrue(new InstantCommand(() -> {shooterSub.setIndexer(8);}));
+            driverController.dpadUp().onTrue(new InstantCommand(() -> {shooterSub.setIndexer(-8);}));
+            driverController.button(XboxController.Button.MENU.value).onTrue(new InstantCommand(() -> {shooterSub.setIndexer(0); shooterSub.setFeeder(0);}));
+            driverController.button(XboxController.Button.B.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(Shooter.Constants.HUB_RPM, Shooter.Constants.HUB_POSITION);}));
+            //driverController.button(XboxController.Button.Y.value).onTrue(new InstantCommand(() -> {})); align + shoot
+          }
+          break;
+        default:
+          if(Operating.Constants.USING_INTAKE) {
+            driverController.button(XboxController.Button.X.value).onTrue(new IntakeRun(intakeSub));
+            driverController.button(XboxController.Button.A.value).onTrue(new IntakeToggle(intakeSub));
+          }
+          if(Operating.Constants.USING_SHOOTER) {
+            driverController.button(XboxController.Button.B.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(Shooter.Constants.HUB_RPM, Shooter.Constants.HUB_POSITION);}));
+            driverController.button(XboxController.Button.Y.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(-3000, -8.5);}));
+
+            driverController.button(XboxController.Button.VIEW.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(-1000, 0);}));
+
+            driverController.dpadLeft().onTrue(new InstantCommand(() -> {shooterSub.setFeeder(11);}));
+            driverController.dpadRight().onTrue(new InstantCommand(() -> {shooterSub.setFeeder(-11);}));
+            driverController.dpadDown().onTrue(new InstantCommand(() -> {shooterSub.setIndexer(8);}));
+            driverController.dpadUp().onTrue(new InstantCommand(() -> {shooterSub.setIndexer(-8);}));
+            driverController.button(XboxController.Button.MENU.value).onTrue(new InstantCommand(() -> {shooterSub.setIndexer(0); shooterSub.setFeeder(0);}));
+          }
+          break;
+      }
+    }
   }

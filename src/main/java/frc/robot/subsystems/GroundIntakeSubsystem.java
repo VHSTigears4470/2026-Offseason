@@ -1,76 +1,90 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.SubsystemBase;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.Configs;
-import frc.robot.Constants.IDs.IntakeConstants;
+import com.revrobotics.spark.SparkLowLevel.ControlType;
+
+import frc.robot.Constants.CAN;
+import frc.robot.Constants.IDs;
+import frc.robot.Constants.Intake;
+import frc.robot.Constants.Configs.ShooterConfigs.IntakeConfigs;
 import frc.robot.components.PIDMotor;
-import frc.robot.components.PIDMotorIO;
 import frc.robot.components.PIDMotorIOSparkMax;
 
 public class GroundIntakeSubsystem extends SubsystemBase {
-    
     private final PIDMotor intakeMotor;
-    private final PIDMotor rotateMotor;
-    private boolean isRetracted;
-    private boolean isIntaking;
+    private final PIDMotor dropMotor;
+
+    private boolean isIntakeDown;
+    private boolean isRunning;
 
     public GroundIntakeSubsystem() {
-        intakeMotor = new PIDMotor(new PIDMotorIOSparkMax(IntakeConstants.INTAKE_MOTOR_ID, Configs.Intake.INTAKE_CONFIG));
-        rotateMotor = new PIDMotor(new PIDMotorIOSparkMax(IntakeConstants.ROTATE_MOTOR_ID, Configs.Intake.ROTATE_CONFIG));
-        isRetracted = true;
-        isIntaking = false;
+        intakeMotor = new PIDMotor(new PIDMotorIOSparkMax(
+            CAN.Constants.IntakeCAN,
+            IDs.IntakeIDs.INTAKE_ID, 
+            IntakeConfigs.INTAKE_CONFIG,
+            1,
+            1)
+        );
+
+        dropMotor = new PIDMotor(new PIDMotorIOSparkMax(
+            CAN.Constants.IntakeCAN, 
+            IDs.IntakeIDs.DROP_ID, 
+            IntakeConfigs.DROP_CONFIG,
+            1, 
+            1)
+        );
+        
+        // we can assume its always starting at up
+        isIntakeDown = false;
     }
 
-    public void setIntakeSpeed(double speed) {
+    public void setIntake(double speed) {
+        isRunning = (speed != 0);
         intakeMotor.set(speed);
-        Logger.recordOutput("GroundIntake/IntakeSpeed", speed);
-    }
-
-    public void setRotateSpeed(double speed) {
-        rotateMotor.set(speed);
-        Logger.recordOutput("GroundIntake/RotateSpeed", speed);
-    }
-
-    public void toggleIntake() {
-        isIntaking = !isIntaking;
-    }
-
-    public void toggleRetract() {
-        isRetracted = !isRetracted;
     }
 
     public void extend() {
-        rotateMotor.setSetpoint(17.0, 0);
+        isIntakeDown = true;
+        dropMotor.setSetpoint(Intake.Constants.downwardsEncoderAngle, ControlType.kMAXMotionPositionControl, 0);
+        setIntake(0.2);    
     }
 
     public void retract() {
-        rotateMotor.setSetpoint(-3.0, 0);
+        isIntakeDown = false;
+        dropMotor.setSetpoint(Intake.Constants.upwardsEncoderAngle, ControlType.kMAXMotionPositionControl, 0); //should always be up
+        setIntake(-0.2);
     }
 
-    public boolean isIntaking() {
-        return isIntaking;
+    public boolean isIntakeDown(){
+        return isIntakeDown;
     }
 
-    public boolean isRetracted() {
-        return isRetracted;
+    public void toggleIntake() {
+        isRunning = !isRunning;
+    }
+    
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public boolean isAtSetpoint(){
+        double currentSetpoint = (isIntakeDown) ? Intake.Constants.downwardsEncoderAngle : Intake.Constants.upwardsEncoderAngle;
+        return Math.abs(dropMotor.getEncoder() - currentSetpoint) < 0.5;
     }
 
     public void stopMotors() {
         intakeMotor.stopMotors();
-        rotateMotor.stopMotors();
+        dropMotor.stopMotors();
     }
 
     public double getRotation() {
-        return rotateMotor.getEncoder();
+        return dropMotor.getEncoderAbs();
     }
 
-    @Override
     public void periodic() {
-        Logger.recordOutput("IntakeSubsystem/Is Retracted", isRetracted);
-        Logger.recordOutput("IntakeSubsystem/Rotate Value", getRotation());
-        Logger.recordOutput("IntakeSubsystem/IntakeMotorRPM", intakeMotor.getRPM());
-        Logger.recordOutput("IntakeSubsystem/RotateMotorRPM", rotateMotor.getRPM());
-    }
+        Logger.recordOutput("IntakeSubsystem/Is Extended", isIntakeDown);
+        Logger.recordOutput("IntakeSubsystem/Rotate Value", getRotation());   
+    }   
 }

@@ -1,10 +1,10 @@
 package frc.robot.components;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 import org.littletonrobotics.junction.Logger;
+import org.wpilib.command2.SubsystemBase;
 
-import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkLowLevel.ControlType;
+
 
 public class PIDMotor extends SubsystemBase {
 
@@ -20,14 +20,14 @@ public class PIDMotor extends SubsystemBase {
     io.updateInputs(inputs);
   }
 
-  public void setSetpoint(double setpoint, double FF) {
-    io.setSetpoint(setpoint, ControlType.kMAXMotionPositionControl, FF);
+  public void setSetpoint(double setpoint, ControlType controlType, double FF) {
+    io.setSetpoint(setpoint, controlType, FF);
     Logger.recordOutput("PIDMotor/Setpoint", setpoint);
   }
 
-  public void setVelocity(double RPM, double FF) {
-    io.setVelocity(RPM, FF);
-    Logger.recordOutput("PIDMotor/SetVelocity", RPM);
+  public void setVelocity(double velocity, double FF) {
+    io.setVelocity(velocity, FF);
+    Logger.recordOutput("PIDMotor/SetVelocity", velocity);
   }
 
   public void setVoltage(double voltage) {
@@ -40,8 +40,9 @@ public class PIDMotor extends SubsystemBase {
     Logger.recordOutput("PIDMotor/Set", speed);
   }
 
-  public double getRPM() {
-    return inputs.RPM;
+  public void setEncoder(double setpoint) {
+    io.setEncoder(setpoint);
+    Logger.recordOutput("PIDMotor/SetEncoder", setpoint);
   }
 
   public void stopMotors() {
@@ -55,5 +56,29 @@ public class PIDMotor extends SubsystemBase {
 
   public double getEncoder() {
     return io.getEncoder();
+  }
+
+  public double getEncoderAbs() {
+    return io.getEncoderAbs();
+  }
+
+  public double getVelocity() {
+    return io.getVelocity();
+  }
+
+  public double getAppliedOutput(){
+      return io.getAppliedOutput();
+  }
+
+  public double getBusVoltage(){
+      return io.getBusVoltage();
+  }
+
+  public double getOutputCurrent(){
+      return io.getOutputCurrent();
+  }
+
+  public double getMotorTemperature() {
+    return io.getMotorTemperature();
   }
 }

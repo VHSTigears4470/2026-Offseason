@@ -1,78 +1,56 @@
 package frc.robot.components;
 
-import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkLowLevel.ControlType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+import frc.robot.Constants.Drive;
+
+import org.wpilib.hardware.bus.CANPort;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
+
 
 public class SwerveModuleIONEO implements SwerveModuleIO {
 
-  private SparkFlex driveMotor = null;
-  private SparkMax turnMotor = null;
-
-  private RelativeEncoder driveEncoder = null;
-  private AbsoluteEncoder turnEncoder = null;
-
-  private SparkClosedLoopController driveController = null;
-  private SparkClosedLoopController turnController = null;
+  private PIDMotor driveMotor = null;
+  private PIDMotor turnMotor = null;
 
   private double chassisAngularOffset = 0;
 
-  public SwerveModuleIONEO(int driveID, int turnID, double offset, SparkFlexConfig driveConfig, SparkMaxConfig turnConfig) {
-    driveMotor = new SparkFlex(driveID, MotorType.kBrushless);
-    turnMotor = new SparkMax(turnID, MotorType.kBrushless);
-    
-    System.out.println(driveMotor.configAccessor.getInverted());
-
-    driveEncoder = driveMotor.getEncoder();
-    turnEncoder = turnMotor.getAbsoluteEncoder();
-
-    driveController = driveMotor.getClosedLoopController();
-    turnController = turnMotor.getClosedLoopController();
-
+  public SwerveModuleIONEO(CANPort driveBusID, CANPort turnBusID, int driveID, int turnID, double offset, SparkFlexConfig driveConfig, SparkMaxConfig turnConfig) {
+    driveMotor = new PIDMotor(new PIDMotorIOSparkFlex(driveBusID, driveID, driveConfig, Drive.ModuleConstants.DRIVING_FACTOR, Drive.ModuleConstants.DRIVING_FACTOR / 60));
+    turnMotor = new PIDMotor(new PIDMotorIOSparkMax(driveBusID, turnID, turnConfig, Drive.ModuleConstants.TURNING_FACTOR, Drive.ModuleConstants.TURNING_FACTOR / 60));
     chassisAngularOffset = offset;
-    
-    driveMotor.configure(driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    turnMotor.configure(turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   @Override public void updateInputs(SwerveModuleIOInputsAutoLogged inputs) {
-    inputs.drivePositionMeters = driveEncoder.getPosition();
-    inputs.driveVelocityMetersPerSec = driveEncoder.getVelocity();
+    inputs.drivePositionMeters = driveMotor.getEncoder();
+    inputs.driveVelocityMetersPerSec = driveMotor.getVelocity();
     inputs.driveAppliedVolts = driveMotor.getAppliedOutput() * driveMotor.getBusVoltage();
     inputs.driveCurrentAmps = driveMotor.getOutputCurrent();
 
-    inputs.turnPositionRad = turnEncoder.getPosition() - chassisAngularOffset;
-    inputs.turnVelocityRadPerSec = turnEncoder.getVelocity();
+    inputs.turnPositionRad = turnMotor.getEncoderAbs() - chassisAngularOffset;
+    inputs.turnVelocityRadPerSec = turnMotor.getVelocity();
     inputs.turnAppliedVolts = turnMotor.getAppliedOutput() * turnMotor.getBusVoltage();
     inputs.turnCurrentAmps = turnMotor.getOutputCurrent();
   }
 
-  @Override public void setDesiredState(SwerveModuleState desiredState)  {
+  @Override public void setDesiredVelocity(SwerveModuleVelocity desiredVelocity)  {
     //Apply chassis offset to the desired state.
-    SwerveModuleState correctedDesiredState = new SwerveModuleState();
-    correctedDesiredState.speedMetersPerSecond = desiredState.speedMetersPerSecond;
-    correctedDesiredState.angle = desiredState.angle.plus(Rotation2d.fromRadians(chassisAngularOffset));
+    SwerveModuleVelocity correctedDesiredVelocity = new SwerveModuleVelocity();
+    correctedDesiredVelocity.velocity = desiredVelocity.velocity;
+    correctedDesiredVelocity.angle = desiredVelocity.angle.plus(Rotation2d.fromRadians(chassisAngularOffset));
 
     //Optimize the reference state as to not turn more than 90 degrees.
-    correctedDesiredState.optimize(new Rotation2d(turnEncoder.getPosition()));
+    correctedDesiredVelocity = correctedDesiredVelocity.optimize(new Rotation2d(turnMotor.getEncoderAbs()));
     
     //Command driving and turning SPARKS toward their respective setpoints.
-    driveController.setSetpoint(correctedDesiredState.speedMetersPerSecond, ControlType.kVelocity);
-    turnController.setSetpoint(correctedDesiredState.angle.getRadians(), ControlType.kPosition);
+    driveMotor.setVelocity(correctedDesiredVelocity.velocity,  0);
+    turnMotor.setSetpoint(correctedDesiredVelocity.angle.getRadians(), ControlType.kPosition, 0);
   }
 
   @Override public void resetDriveEncoder() {
-    driveEncoder.setPosition(0);
+    driveMotor.setEncoder(0);
   }
 }

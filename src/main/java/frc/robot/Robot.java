@@ -11,8 +11,10 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+
+import com.revrobotics.util.StatusLogger;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -29,11 +31,13 @@ public class Robot extends LoggedRobot  {
    * initialization code.
    */
   public Robot() {
+    StatusLogger.disableAutoLogging();
     Logger.recordMetadata("ProjectName", "2026-Offseason"); // Set a metadata value
     Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
-    if (isReal()) { 
-      Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+    if (isReal()) {
+		// FIXED PATH TO SYSCORE
+		Logger.addDataReceiver(new WPILOGWriter("/home/systemcore/logs")); 
     } else {
       setUseTiming(false); // Run as fast as possible
       String logPath = null;
@@ -85,7 +89,12 @@ public class Robot extends LoggedRobot  {
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
-  public void autonomousInit() {}
+  public void autonomousInit() {
+      m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+      if(m_autonomousCommand != null) {
+        CommandScheduler.getInstance().schedule(m_autonomousCommand);
+      }
+  }
 
   /** This function is called periodically during autonomous. */
   @Override
@@ -105,16 +114,6 @@ public class Robot extends LoggedRobot  {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {}
-
-  @Override
-  public void testInit() {
-    // Cancels all running commands at the start of test mode.
-    CommandScheduler.getInstance().cancelAll();
-  }
-
-  /** This function is called periodically during test mode. */
-  @Override
-  public void testPeriodic() {}
 
   /** This function is called once when the robot is first started up. */
   @Override

@@ -1,14 +1,14 @@
 package frc.robot.Constants;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.util.Units;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.SwerveDriveKinematics;
+import org.wpilib.math.util.Units;
 
 public final class Drive {
     public static final class Constants {
-        public static final double MAX_METERS_PER_SECOND = 4.46;
-        public static final double MAX_ANGULAR_SPEED = 2 * Math.PI; //radians per second
+        public static final double MAX_METERS_PER_SECOND = 7.60;
+        public static final double MAX_ANGULAR_SPEED = 2 * Math.PI * 2; //radians per second
 
         public static final double WHEEL_BASE = Units.inchesToMeters(27.5);  //update?
         public static final double TRACK_WIDTH = Units.inchesToMeters(27.5); //update?
@@ -20,8 +20,8 @@ public final class Drive {
             new Translation2d(-WHEEL_BASE / 2, -TRACK_WIDTH / 2)); //Back Right
 
         public static final double FL_ANGULAR_OFFSET = Math.PI/2;
-        public static final double BL_ANGULAR_OFFSET =  Math.PI;
-        public static final double FR_ANGULAR_OFFSET = Math.PI;
+        public static final double BL_ANGULAR_OFFSET =  0;
+        public static final double FR_ANGULAR_OFFSET = 0;
         public static final double BR_ANGULAR_OFFSET = Math.PI/2;
 
         public enum MotorLocation {
@@ -59,9 +59,12 @@ public final class Drive {
         public static final int DRIVE_MOTOR_PINION_TEETH = 16;
         public static final double WHEEL_DIAMETER = Units.inchesToMeters(3);
         public static final double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * Math.PI;
-        public static final double DRIVE_MOTOR_REDUCTION = 3.56 * 19 / DRIVE_MOTOR_PINION_TEETH; 
+        public static final double DRIVE_MOTOR_REDUCTION = 3.5625 * DRIVE_MOTOR_PINION_TEETH / 19; 
                                                           //(bevel * spur) /(pinion * bevel_secondary)   
-        public static final double DRIVE_MOTOR_FREE_RPS = 5676.0 / 60.0;
-        public static final double DRIVE_WHEEL_FREE_RPS = (DRIVE_MOTOR_FREE_RPS * WHEEL_CIRCUMFERENCE) / DRIVE_MOTOR_REDUCTION;
+        public static final double DRIVE_MOTOR_FREE_RPS = 6784.0 / 60.0;
+        public static final double DRIVE_WHEEL_FREE_MPS = (DRIVE_MOTOR_FREE_RPS * WHEEL_CIRCUMFERENCE) / DRIVE_MOTOR_REDUCTION;
+
+        public static final double DRIVING_FACTOR = WHEEL_CIRCUMFERENCE  / 3.625;
+        public static final double TURNING_FACTOR = 2 * Math.PI;
     }
 }
