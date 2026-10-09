@@ -59,9 +59,12 @@ public final class Drive {
         public static final int DRIVE_MOTOR_PINION_TEETH = 16;
         public static final double WHEEL_DIAMETER = Units.inchesToMeters(3);
         public static final double WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * Math.PI;
-        public static final double DRIVE_MOTOR_REDUCTION = 3.56 * 19 / DRIVE_MOTOR_PINION_TEETH; 
+        public static final double DRIVE_MOTOR_REDUCTION = 3.5625 * DRIVE_MOTOR_PINION_TEETH / 19; 
                                                           //(bevel * spur) /(pinion * bevel_secondary)   
-        public static final double DRIVE_MOTOR_FREE_RPS = 5676.0 / 60.0;
-        public static final double DRIVE_WHEEL_FREE_RPS = (DRIVE_MOTOR_FREE_RPS * WHEEL_CIRCUMFERENCE) / DRIVE_MOTOR_REDUCTION;
+        public static final double DRIVE_MOTOR_FREE_RPS = 6784.0 / 60.0;
+        public static final double DRIVE_WHEEL_FREE_MPS = (DRIVE_MOTOR_FREE_RPS * WHEEL_CIRCUMFERENCE) / DRIVE_MOTOR_REDUCTION;
+
+        public static final double DRIVING_FACTOR = WHEEL_CIRCUMFERENCE  / 3.625;
+        public static final double TURNING_FACTOR = 2 * Math.PI;
     }
 }

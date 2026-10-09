@@ -1,5 +1,7 @@
 package frc.robot.Constants;
 
+import org.wpilib.driverstation.Gamepad.Axis;
+
 public final class OI {
     public static final class Constants {
         public static final int DRIVE_CONTROLLER_PORT = 0;
@@ -10,9 +12,9 @@ public final class OI {
         public static final int DRIVER_AXIS_Y_INVERTED = -1;
         public static final int DRIVER_AXIS_ROT_INVERTED = -1;
 
-        public static final int DRIVER_AXIS_X = 0;
-        public static final int DRIVER_AXIS_Y = 1;
-        public static final int DRIVER_AXIS_ROT = 2;
+        public static final Axis DRIVER_AXIS_X = Axis.LEFT_X;
+        public static final Axis DRIVER_AXIS_Y = Axis.LEFT_Y;
+        public static final Axis DRIVER_AXIS_ROT = Axis.RIGHT_X;
         public static final int DRIVER_AXIS_ORIENTED_BUTTON = 1;
     }
 }

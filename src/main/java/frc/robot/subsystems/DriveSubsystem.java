@@ -1,17 +1,9 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
-
-import org.wpilib.system.Timer;
-
-import com.ctre.phoenix6.hardware.Pigeon2;
-import com.limelightvision.Limelight;
-import com.limelightvision.Limelight.PoseEstimateType;
-
-// import choreo.trajectory.SwerveSample;
-// import org.wpilib.hardware.hal.FRCNetComm.tInstances;
-// import org.wpilib.hardware.hal.FRCNetComm.tResourceType;
-import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
 import org.wpilib.math.geometry.Pose2d;
@@ -21,20 +13,33 @@ import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.kinematics.SwerveDriveOdometry;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
+// import choreo.trajectory.SwerveSample;
+// import org.wpilib.hardware.hal.FRCNetComm.tInstances;
+// import org.wpilib.hardware.hal.FRCNetComm.tResourceType;
+import org.wpilib.math.linalg.VecBuilder;
 import org.wpilib.math.util.Units;
+import org.wpilib.net.PortForwarder;
 import org.wpilib.system.RobotController;
-import org.wpilib.command2.SubsystemBase;
-import frc.robot.components.SwerveModule;
-import frc.robot.components.SwerveModuleIONEO;
+import org.wpilib.system.Timer;
+
+import com.ctre.phoenix6.hardware.Pigeon2;
+import com.limelightvision.Limelight;
+import com.limelightvision.PoseEstimate;
+import com.limelightvision.PoseEstimateType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
 import frc.robot.Robot;
 import frc.robot.Constants.CAN;
 import frc.robot.Constants.Configs;
 import frc.robot.Constants.Drive;
 import frc.robot.Constants.Drive.Constants.MotorLocation;
-import frc.robot.Constants.IDs;
-import frc.robot.Constants.IDs.CANBUSIDs;
 import frc.robot.Constants.IDs.DriveIDs;
 import frc.robot.Constants.Operating;
+import frc.robot.components.SwerveModule;
+import frc.robot.components.SwerveModuleIONEO;
 
 public class DriveSubsystem extends SubsystemBase {
     private SwerveModule frontLeft = null;
@@ -57,12 +62,12 @@ public class DriveSubsystem extends SubsystemBase {
     private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
     private final Limelight limelight;
-
+    
     public DriveSubsystem() {
             frontLeft = new SwerveModule(
                 new SwerveModuleIONEO(
-                    CANBUSIDs.DRIVE_CANBUS_ID,
-                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CAN.Constants.DriveCAN,
+                    CAN.Constants.DriveCAN,
                     DriveIDs.FL_DRIVE_ID,
                     DriveIDs.FL_TURN_ID,
                     Drive.Constants.FL_ANGULAR_OFFSET,
@@ -70,8 +75,8 @@ public class DriveSubsystem extends SubsystemBase {
                     Configs.SwerveModuleConfigs.TURNING_CONFIG),
                 MotorLocation.FRONT_LEFT);
             frontRight = new SwerveModule(new SwerveModuleIONEO(
-                    CANBUSIDs.DRIVE_CANBUS_ID,
-                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CAN.Constants.DriveCAN,
+                    CAN.Constants.DriveCAN,
                     DriveIDs.FR_DRIVE_ID,
                     DriveIDs.FR_TURN_ID,
                     Drive.Constants.FR_ANGULAR_OFFSET,
@@ -79,8 +84,8 @@ public class DriveSubsystem extends SubsystemBase {
                     Configs.SwerveModuleConfigs.TURNING_CONFIG),
                 MotorLocation.FRONT_RIGHT);
             backLeft = new SwerveModule(new SwerveModuleIONEO(
-                    CANBUSIDs.DRIVE_CANBUS_ID,
-                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CAN.Constants.DriveCAN,
+                    CAN.Constants.DriveCAN,
                     DriveIDs.BL_DRIVE_ID,
                     DriveIDs.BL_TURN_ID,
                     Drive.Constants.BL_ANGULAR_OFFSET,
@@ -88,8 +93,8 @@ public class DriveSubsystem extends SubsystemBase {
                     Configs.SwerveModuleConfigs.TURNING_CONFIG),
                 MotorLocation.BACK_LEFT);
             backRight = new SwerveModule(new SwerveModuleIONEO(
-                    CANBUSIDs.DRIVE_CANBUS_ID,
-                    CANBUSIDs.DRIVE_CANBUS_ID,
+                    CAN.Constants.DriveCAN,
+                    CAN.Constants.DriveCAN,
                     DriveIDs.BR_DRIVE_ID,
                     DriveIDs.BR_TURN_ID,
                     Drive.Constants.BR_ANGULAR_OFFSET,
@@ -113,15 +118,50 @@ public class DriveSubsystem extends SubsystemBase {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         // TODO: FIX     
         // HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
-
+        configureAutoBuilder();
         limelight = new Limelight("limelight-one");
+
     }
 
+    private void configureAutoBuilder() {
+        RobotConfig config;
+        try {
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        try {
+            AutoBuilder.configure(
+                this::getOdometry,   // Supplier of current robot pose *getPose
+                this::resetOdometry,         // Consumer for seeding pose against auto
+                this::getRobotRelativeVelocities, // Supplier of current robot speeds
+                // Consumer of ChassisSpeeds and feedforwards to drive the robot
+                this::driveRobotRelative,
+                new PPHolonomicDriveController(
+                    // PID constants for translation
+                    new PIDConstants(.04, 0, 0), // new PIDConstants(.000125, 0, 0), //Change(?)
+                    // PID constants for rotation
+                    new PIDConstants(0.5, 0, 0)  // kP = 1.0 //Change(?)
+                ),
+                config,
+                // Assume the path needs to be flipped for Red vs Blue, this is normally the case
+                () -> MatchState.getAlliance().orElse(Alliance.BLUE) == Alliance.RED,
+                this // Subsystem for requirements
+            );
+        } catch (Exception ex) {
+            System.out.println("Failed to load PathPlanner config and configure AutoBuilder");
+            ex.printStackTrace();
+            return;
+        }
+    }
+    
+
     public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, String statusName) {
-        double multiplier = 0.5; 
+        double multiplier = 0.3; 
         double xSpeedDelivered = xSpeed * Drive.Constants.MAX_METERS_PER_SECOND * multiplier;
         double ySpeedDelivered = ySpeed * Drive.Constants.MAX_METERS_PER_SECOND * multiplier;
-        double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * multiplier;
+        double rotDelivered = rot * Drive.Constants.MAX_ANGULAR_SPEED * 0.5;
 
         ChassisVelocities chassisVelocities = new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotDelivered);
         if(fieldRelative) {
@@ -139,30 +179,29 @@ public class DriveSubsystem extends SubsystemBase {
         backRight.setDesiredVelocity(SwerveModuleVelocities[3]);
     }
 
-    // public void followTrajectory(SwerveSample sample) {
-    //     Pose2d pose = getOdometry(); //getEstimatedPosition();
-    //
-    //     ChassisVelocities speeds = new ChassisVelocities(
-    //         sample.vx + xController.calculate(pose.getX(), sample.x),
-    //         sample.vy + yController.calculate(pose.getY(), sample.y),
-    //         sample.omega + headingController.calculate(pose.getRotation().getRadians(), sample.heading)
-    //     );
-    //
-    //     driveFieldRelative(speeds);
-    // }
-    //
     public void driveFieldRelative(ChassisVelocities fieldRelativeVelocities) {
         ChassisVelocities relativeSpeeds = fieldRelativeVelocities.toRobotRelative(getRotation2d());
         driveRobotRelative(relativeSpeeds);
     }
 
     public void driveRobotRelative(ChassisVelocities relativeVelocities) {
+        Logger.recordOutput("PathPlanner/CommandedVX", relativeVelocities.vx);
+        Logger.recordOutput("PathPlanner/CommandedVY", relativeVelocities.vy);
+        Logger.recordOutput("PathPlanner/CommandedOmega", relativeVelocities.omega);
+
         ChassisVelocities targetSpeeds = relativeVelocities.discretize(0.02);
-        SwerveModuleVelocity[] targetStates = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(targetSpeeds);
-        frontLeft.setDesiredVelocity(targetStates[0]);
-        frontRight.setDesiredVelocity(targetStates[1]);
-        backLeft.setDesiredVelocity(targetStates[2]);
-        backRight.setDesiredVelocity(targetStates[3]);
+
+        SwerveModuleVelocity[] swerveModuleVelocities = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(targetSpeeds);
+        Logger.recordOutput("PathPlanner/Commanded/FL", swerveModuleVelocities[0].velocity);
+        Logger.recordOutput("PathPlanner/Commanded/FR", swerveModuleVelocities[1].velocity);
+        Logger.recordOutput("PathPlanner/Commanded/BL", swerveModuleVelocities[2].velocity);
+        Logger.recordOutput("PathPlanner/Commanded/BR", swerveModuleVelocities[3].velocity);
+
+        desiredStates = swerveModuleVelocities;
+        frontLeft.setDesiredVelocity(swerveModuleVelocities[0]);
+        frontRight.setDesiredVelocity(swerveModuleVelocities[1]);
+        backLeft.setDesiredVelocity(swerveModuleVelocities[2]);
+        backRight.setDesiredVelocity(swerveModuleVelocities[3]);
     }
 
     public SwerveModuleVelocity[] getSwerveModuleVelocities() {
@@ -200,7 +239,7 @@ public class DriveSubsystem extends SubsystemBase {
         return poseEstimator.getEstimatedPosition();
     }
 
-    public ChassisVelocities getRobotRelativeSVelocities() {
+    public ChassisVelocities getRobotRelativeVelocities() {
         return Drive.Constants.DRIVE_KINEMATICS.toChassisVelocities(
             frontLeft.getVelocity(),
             frontRight.getVelocity(),
@@ -253,10 +292,12 @@ public class DriveSubsystem extends SubsystemBase {
             desiredStates[i].velocity = 0;
     }
 
+   
+
     @Override
     public void periodic() {
         Logger.recordOutput("Drive/Pose", poseEstimator.getEstimatedPosition());
-        Logger.recordOutput("Drive/LimelightPose", limelight.getBotPose3d(PoseEstimateType.MT2_WPIBLUE));
+        Logger.recordOutput("Drive/LimelightPose", limelight.getRobotPose(PoseEstimateType.MT2_WPIBLUE));
         Logger.recordOutput("Drive/Pose/X", poseEstimator.getEstimatedPosition().getX());
         Logger.recordOutput("Drive/Pose/Y", poseEstimator.getEstimatedPosition().getY());
         Logger.recordOutput("Drive/Pose/Rotation", poseEstimator.getEstimatedPosition().getRotation().getDegrees());
@@ -297,7 +338,7 @@ public class DriveSubsystem extends SubsystemBase {
             boolean useMegaTag2 = true; //set to false to use MegaTag1
             boolean doRejectUpdate = false;
             if(useMegaTag2 == false) {
-                Limelight.PoseEstimate mt1 = limelight.getPoseEstimate(PoseEstimateType.MT1_WPIBLUE);
+                PoseEstimate mt1 = limelight.getPoseEstimate(PoseEstimateType.MT1_WPIBLUE);
                 if(mt1.reportedTagCount == 1 && mt1.rawFiducials.length == 1) {
                     if(mt1.rawFiducials[0].ambiguity > .7) {
                         doRejectUpdate = true;
@@ -314,8 +355,9 @@ public class DriveSubsystem extends SubsystemBase {
                     poseEstimator.addVisionMeasurement(mt1.pose, mt1.timestampSeconds);
                 }
             } else if (useMegaTag2 == true) {
-                limelight.setRobotOrientation(poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-                Limelight.PoseEstimate mt2 = limelight.getPoseEstimate(PoseEstimateType.MT2_WPIBLUE);
+                // limelight.setRobotOrientation(poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+                limelight.setRobotOrientation(poseEstimator.getEstimatedPosition().getRotation().getDegrees(), true);
+                PoseEstimate mt2 = limelight.getPoseEstimate(PoseEstimateType.MT2_WPIBLUE);
                 if(Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) {
                     // if our angular velocity is greater than 720 degrees per second, ignore vision updates
                     doRejectUpdate = true;
