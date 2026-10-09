@@ -48,13 +48,13 @@ public class GroundIntakeSubsystem extends SubsystemBase {
     public void extend() {
         isIntakeDown = true;
         dropMotor.setSetpoint(Intake.Constants.downwardsEncoderAngle, ControlType.kMAXMotionPositionControl, 0);
-        intakeMotor.set(0.2);
+        setIntake(0.2);    
     }
 
     public void retract() {
         isIntakeDown = false;
         dropMotor.setSetpoint(Intake.Constants.upwardsEncoderAngle, ControlType.kMAXMotionPositionControl, 0); //should always be up
-        intakeMotor.set(-0.2);
+        setIntake(-0.2);
     }
 
     public boolean isIntakeDown(){

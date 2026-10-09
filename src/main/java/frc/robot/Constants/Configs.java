@@ -20,7 +20,8 @@ public final class Configs {
 
             TURNING_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(20);
+                .smartCurrentLimit(20)
+                .secondaryCurrentLimit(70);
             TURNING_CONFIG.absoluteEncoder
                 .inverted(true);
                 //.positionConversionFactor(TURNING_FACTOR)         <- deprecated, set through hardware manager
@@ -34,53 +35,57 @@ public final class Configs {
 
             FL_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(60)
+                .smartCurrentLimit(40)
+                .secondaryCurrentLimit(90)
                 .inverted(true);
             //FL_CONFIG.encoder
                 //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
                 //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             FL_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .p(0.000125)
+                .p(0.0001)
                 .apply(new FeedForwardConfig().kV(FF_VELOCITY))
                 .outputRange(-1, 1);
 
             FR_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(60)
+                .smartCurrentLimit(40)
+                .secondaryCurrentLimit(90)
                 .inverted(false);
             //FR_CONFIG.encoder
                 //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
                 //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             FR_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .p(0.000125)
+                .p(0.0001)
                 .apply(new FeedForwardConfig().kV(FF_VELOCITY))
                 .outputRange(-1, 1);
 
             BL_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(60)
+                .smartCurrentLimit(40)
+                .secondaryCurrentLimit(90)
                 .inverted(true);
-            //BL_CONFIG.encoder
-                //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
+            // BL_CONFIG.encoder
+                // .positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
                 //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             BL_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .p(0.000125) 
+                .p(0.0001) 
                 .apply(new FeedForwardConfig().kV(FF_VELOCITY))
                 .outputRange(-1, 1);
 
             BR_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(60)
+                .smartCurrentLimit(40)
+                .secondaryCurrentLimit(90)
                 .inverted(false);
             //BR_CONFIG.encoder
                 //.positionConversionFactor(DRIVING_FACTOR) //meters <- deprecated, set through hardware manager
                 //.velocityConversionFactor(DRIVING_FACTOR / 60.0);  <- deprecated, set through hardware manager
             BR_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .p(0.000125)
+                .p(0.0001)
                 .apply(new FeedForwardConfig().kV(FF_VELOCITY))
                 .outputRange(-1, 1);
         }
@@ -97,7 +102,7 @@ public final class Configs {
             FLYWHEEL_CONFIG
                 .idleMode(IdleMode.kCoast)
                 .smartCurrentLimit(60) // FIX: this
-                .secondaryCurrentLimit(100)
+                .secondaryCurrentLimit(85)
                 .voltageCompensation(12)
                 .inverted(false); 
             FLYWHEEL_CONFIG.closedLoop
@@ -112,11 +117,12 @@ public final class Configs {
             //Retune closed loop controller
             HOOD_CONFIG
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(40);
+                .smartCurrentLimit(40)
+                .secondaryCurrentLimit(80);
             HOOD_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .p(0.3)
-                .outputRange(-.6, 0.6);
+                .outputRange(-0.4, 0.4);
         
             FEEDER_CONFIG
                 .idleMode(IdleMode.kBrake)

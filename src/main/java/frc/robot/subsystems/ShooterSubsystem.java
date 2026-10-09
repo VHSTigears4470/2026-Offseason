@@ -20,9 +20,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private final PIDMotor feederMotor;
     private final PIDMotor indexerMotor;
     
-    private double toHubPosition; 
+    private double desiredRPM; 
     private boolean shooterActive;
-    private boolean shootingManual;
 
     public ShooterSubsystem() {
         flywheelMotor = new PIDMotor(new PIDMotorIOSparkFlex(CAN.Constants.ShooterCAN, ShooterIDs.FLYWHEEL_ID, ShooterConfigs.FLYWHEEL_CONFIG, 1, 1));
@@ -30,7 +29,7 @@ public class ShooterSubsystem extends SubsystemBase {
         feederMotor = new PIDMotor(new PIDMotorIOSparkMax(CAN.Constants.FeederCAN, ShooterIDs.FEEDER_ID, ShooterConfigs.FEEDER_CONFIG, 1, 1));
         indexerMotor = new PIDMotor(new PIDMotorIOSparkMax(CAN.Constants.FeederCAN, ShooterIDs.INDEXER_ID, ShooterConfigs.INDEXER_CONFIG, 1, 1));
 
-        toHubPosition = 0;
+        desiredRPM = 0;
         shooterActive = false;
     }
 
@@ -39,22 +38,22 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public boolean flywheelReady() {
-        return (Math.abs(flywheelMotor.getVelocity() - Shooter.Constants.SHOOTER_RPM) < Math.abs(Shooter.Constants.SHOOTER_RPM * 0.05));
+        return (Math.abs(flywheelMotor.getVelocity() - desiredRPM) < Math.abs(Shooter.Constants.HUB_RPM * 0.05));
     }
         
-    public void toggleShooter(boolean shootingManual) {
+    public void toggleShooter(double flywheelVelocity, double hoodSetpoint) {
         shooterActive = !shooterActive;
 
         if (!shooterActive) {
             flywheelMotor.setVoltage(0);
             setFeeder(0);
             setIndexer(0);
-            //hoodMotor.setSetpoint(0, ControlType.kMAXMotionPositionControl, 0);
+            hoodMotor.setSetpoint(-0.2, ControlType.kPosition, 0);
         } else {
-            flywheelMotor.setVelocity(Shooter.Constants.SHOOTER_RPM, 0); //-4.236
+            flywheelMotor.setVelocity(flywheelVelocity, 0); //-4.236
+            hoodMotor.setSetpoint(hoodSetpoint, ControlType.kPosition, 0);
+            desiredRPM = flywheelVelocity;
         }
-
-        this.shootingManual = shootingManual;
     }
 
     public boolean isShooting() {
@@ -74,11 +73,6 @@ public class ShooterSubsystem extends SubsystemBase {
     public void setHoodSetpoint(double setpoint) {
         hoodMotor.setSetpoint(setpoint, ControlType.kPosition, 0);
         Logger.recordOutput("Shooter/Hood Desired Setpoint", setpoint);
-    }
-
-    public void updateDesiredPosition(double distance) {
-        toHubPosition = Shooter.Constants.HOOD_ANGLE_TABLE.get(distance);
-        Logger.recordOutput("Shooter/Aligned Position", toHubPosition);
     }
 
     public void stopMotors() {
@@ -101,18 +95,11 @@ public class ShooterSubsystem extends SubsystemBase {
                  setFeeder(0);
                  setIndexer(0);
             }
-
-            /*if(shootingManual) {
-                hoodMotor.setSetpoint(Shooter.Constants.MANUAL_SHOT_POSITION, ControlType.kPosition, 0);
-                Logger.recordOutput("Shooter/Desired Position", Shooter.Constants.MANUAL_SHOT_POSITION);
-            } else {
-                hoodMotor.setSetpoint(Math.max(Shooter.Constants.HOOD_THRESHOLD, toHubPosition), ControlType.kPosition, 0);
-                Logger.recordOutput("Shooter/Desired Position", toHubPosition);
-            }*/
         } 
         
         Logger.recordOutput("Shooter/Flywheel Ready", flywheelReady());
         Logger.recordOutput("Shooter/Flywheel Amperage", flywheelMotor.getOutputCurrent());
         Logger.recordOutput("RPM/Actual", flywheelMotor.getVelocity());
+        Logger.recordOutput("Shooter/Hood Amperage", hoodMotor.getOutputCurrent());
     }
 }

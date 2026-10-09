@@ -34,6 +34,7 @@ import org.wpilib.command2.CommandScheduler;
 
 import frc.robot.Constants.OI;
 import frc.robot.Constants.Operating;
+import frc.robot.Constants.Shooter;
 import frc.robot.commands.IntakeRun;
 import frc.robot.commands.IntakeToggle;
 import frc.robot.subsystems.DriveSubsystem;
@@ -54,7 +55,8 @@ public class RobotContainer {
       
       if (Operating.Constants.USING_AUTO) {
         autoChooser = AutoBuilder.buildAutoChooser();
-        autoChooser.add("2-Meters", new PathPlannerAuto("2-Meters"));
+        autoChooser.add("Shoot at Hub", new PathPlannerAuto("Shoot at Hub"));
+        autoChooser.setDefault("None");
         Tunables.publish("Auto Path", autoChooser);
       } else {
         autoChooser = null;
@@ -91,9 +93,13 @@ public class RobotContainer {
       }
       if(Operating.Constants.USING_INTAKE) {
         intakeSub = new GroundIntakeSubsystem();
+        NamedCommands.registerCommand("Toggle Intake Arm", new IntakeToggle(intakeSub));
+        NamedCommands.registerCommand("Toggle Intake Run", new IntakeRun(intakeSub));
       }
        if(Operating.Constants.USING_SHOOTER) {
         shooterSub = new ShooterSubsystem();
+        NamedCommands.registerCommand("Toggle Shoot Hub", new InstantCommand(() -> {shooterSub.toggleShooter(Shooter.Constants.HUB_RPM, Shooter.Constants.HUB_POSITION);}));
+        NamedCommands.registerCommand("Toggle Shoot Side", new InstantCommand(() -> {shooterSub.toggleShooter(-3000, -8.5);}));
       }
     }
   
@@ -101,23 +107,14 @@ public class RobotContainer {
     public Command getAutonomousCommand() { 
       if (Operating.Constants.USING_AUTO) {
         //Logger.recordOutput("Auto/Auto Path", autoChooser.getSelected().getName());
-        //return autoChooser.getSelected();
-        PathPlannerPath path;
-        try {
-           path = PathPlannerPath.fromPathFile("2-Meters");
-        } catch (Exception e) {
-           path = null;
-        }
-        
-        return AutoBuilder.followPath(path);
+        return autoChooser.getSelected();
       }
       return null;
-
     }
 
     private void configureBindings() {
-      //1 - motor testing
-      //defualt - Competition Controller Scheme
+      //0 - motor testing
+      //default - Competition Controller Scheme
       int preset = 1; 
       switch (preset) {
         case 0:
@@ -134,7 +131,7 @@ public class RobotContainer {
             driverController.dpadDown().onTrue(new InstantCommand(() -> {shooterSub.setIndexer(8);}));
             driverController.dpadUp().onTrue(new InstantCommand(() -> {shooterSub.setIndexer(-8);}));
             driverController.button(XboxController.Button.MENU.value).onTrue(new InstantCommand(() -> {shooterSub.setIndexer(0); shooterSub.setFeeder(0);}));
-            driverController.button(XboxController.Button.B.value).onTrue(new ParallelCommandGroup(new InstantCommand(() -> {shooterSub.toggleShooter(true);}), new IntakeRun(intakeSub)));
+            driverController.button(XboxController.Button.B.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(Shooter.Constants.HUB_RPM, Shooter.Constants.HUB_POSITION);}));
             //driverController.button(XboxController.Button.Y.value).onTrue(new InstantCommand(() -> {})); align + shoot
           }
           break;
@@ -144,8 +141,10 @@ public class RobotContainer {
             driverController.button(XboxController.Button.A.value).onTrue(new IntakeToggle(intakeSub));
           }
           if(Operating.Constants.USING_SHOOTER) {
-            driverController.button(XboxController.Button.B.value).onTrue(new ParallelCommandGroup(new InstantCommand(() -> {shooterSub.toggleShooter(true);}), new IntakeRun(intakeSub)));
-            //driverController.button(XboxController.Button.Y.value).onTrue(new InstantCommand(() -> {})); align + shoot
+            driverController.button(XboxController.Button.B.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(Shooter.Constants.HUB_RPM, Shooter.Constants.HUB_POSITION);}));
+            driverController.button(XboxController.Button.Y.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(-3000, -8.5);}));
+
+            driverController.button(XboxController.Button.VIEW.value).onTrue(new InstantCommand(() -> {shooterSub.toggleShooter(-1000, 0);}));
 
             driverController.dpadLeft().onTrue(new InstantCommand(() -> {shooterSub.setFeeder(11);}));
             driverController.dpadRight().onTrue(new InstantCommand(() -> {shooterSub.setFeeder(-11);}));

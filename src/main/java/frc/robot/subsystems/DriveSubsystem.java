@@ -1,7 +1,25 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.Logger;
-
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.kinematics.SwerveDriveKinematics;
+import org.wpilib.math.kinematics.SwerveDriveOdometry;
+import org.wpilib.math.kinematics.SwerveModulePosition;
+import org.wpilib.math.kinematics.SwerveModuleVelocity;
+// import choreo.trajectory.SwerveSample;
+// import org.wpilib.hardware.hal.FRCNetComm.tInstances;
+// import org.wpilib.hardware.hal.FRCNetComm.tResourceType;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.util.Units;
+import org.wpilib.net.PortForwarder;
+import org.wpilib.system.RobotController;
 import org.wpilib.system.Timer;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -13,28 +31,6 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
-// import choreo.trajectory.SwerveSample;
-// import org.wpilib.hardware.hal.FRCNetComm.tInstances;
-// import org.wpilib.hardware.hal.FRCNetComm.tResourceType;
-import org.wpilib.math.linalg.VecBuilder;
-import org.wpilib.math.controller.PIDController;
-import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
-import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.math.geometry.Rotation2d;
-import org.wpilib.math.kinematics.ChassisVelocities;
-import org.wpilib.math.kinematics.SwerveDriveKinematics;
-import org.wpilib.math.kinematics.SwerveDriveOdometry;
-import org.wpilib.math.kinematics.SwerveModulePosition;
-import org.wpilib.math.kinematics.SwerveModuleVelocity;
-import org.wpilib.math.util.Units;
-import org.wpilib.system.RobotController;
-import org.wpilib.command2.SubsystemBase;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.driverstation.DriverStation;
-import org.wpilib.driverstation.MatchState;
-
-import frc.robot.components.SwerveModule;
-import frc.robot.components.SwerveModuleIONEO;
 import frc.robot.Robot;
 import frc.robot.Constants.CAN;
 import frc.robot.Constants.Configs;
@@ -42,6 +38,8 @@ import frc.robot.Constants.Drive;
 import frc.robot.Constants.Drive.Constants.MotorLocation;
 import frc.robot.Constants.IDs.DriveIDs;
 import frc.robot.Constants.Operating;
+import frc.robot.components.SwerveModule;
+import frc.robot.components.SwerveModuleIONEO;
 
 public class DriveSubsystem extends SubsystemBase {
     private SwerveModule frontLeft = null;
@@ -122,6 +120,7 @@ public class DriveSubsystem extends SubsystemBase {
         // HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_MaxSwerve);
         configureAutoBuilder();
         limelight = new Limelight("limelight-one");
+
     }
 
     private void configureAutoBuilder() {
@@ -141,9 +140,9 @@ public class DriveSubsystem extends SubsystemBase {
                 this::driveRobotRelative,
                 new PPHolonomicDriveController(
                     // PID constants for translation
-                    new PIDConstants(.000125, 0, 0), //Change(?)
+                    new PIDConstants(.04, 0, 0), // new PIDConstants(.000125, 0, 0), //Change(?)
                     // PID constants for rotation
-                    new PIDConstants(1, 0, 0) //Change(?)
+                    new PIDConstants(0.5, 0, 0)  // kP = 1.0 //Change(?)
                 ),
                 config,
                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case
@@ -151,7 +150,8 @@ public class DriveSubsystem extends SubsystemBase {
                 this // Subsystem for requirements
             );
         } catch (Exception ex) {
-            System.out.println("Failed to load PathPlanner config and configure AutoBuilder"+ ex.getStackTrace());
+            System.out.println("Failed to load PathPlanner config and configure AutoBuilder");
+            ex.printStackTrace();
             return;
         }
     }
@@ -185,13 +185,23 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     public void driveRobotRelative(ChassisVelocities relativeVelocities) {
+        Logger.recordOutput("PathPlanner/CommandedVX", relativeVelocities.vx);
+        Logger.recordOutput("PathPlanner/CommandedVY", relativeVelocities.vy);
+        Logger.recordOutput("PathPlanner/CommandedOmega", relativeVelocities.omega);
+
         ChassisVelocities targetSpeeds = relativeVelocities.discretize(0.02);
-        SwerveModuleVelocity[] SwerveModuleVelocities = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(targetSpeeds);
-        desiredStates = SwerveModuleVelocities;
-        frontLeft.setDesiredVelocity(SwerveModuleVelocities[0]);
-        frontRight.setDesiredVelocity(SwerveModuleVelocities[1]);
-        backLeft.setDesiredVelocity(SwerveModuleVelocities[2]);
-        backRight.setDesiredVelocity(SwerveModuleVelocities[3]);
+
+        SwerveModuleVelocity[] swerveModuleVelocities = Drive.Constants.DRIVE_KINEMATICS.toSwerveModuleVelocities(targetSpeeds);
+        Logger.recordOutput("PathPlanner/Commanded/FL", swerveModuleVelocities[0].velocity);
+        Logger.recordOutput("PathPlanner/Commanded/FR", swerveModuleVelocities[1].velocity);
+        Logger.recordOutput("PathPlanner/Commanded/BL", swerveModuleVelocities[2].velocity);
+        Logger.recordOutput("PathPlanner/Commanded/BR", swerveModuleVelocities[3].velocity);
+
+        desiredStates = swerveModuleVelocities;
+        frontLeft.setDesiredVelocity(swerveModuleVelocities[0]);
+        frontRight.setDesiredVelocity(swerveModuleVelocities[1]);
+        backLeft.setDesiredVelocity(swerveModuleVelocities[2]);
+        backRight.setDesiredVelocity(swerveModuleVelocities[3]);
     }
 
     public SwerveModuleVelocity[] getSwerveModuleVelocities() {

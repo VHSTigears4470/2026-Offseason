@@ -13,7 +13,6 @@ public class IntakeToggle extends Command{
     }
 
     @Override 
-    
     public void initialize(){
         if(!intakeSub.isIntakeDown())
             intakeSub.extend();
@@ -25,12 +24,10 @@ public class IntakeToggle extends Command{
     public void execute(){}
 
     @Override
-    public void end(boolean interrupted){
-        intakeSub.setIntake(0);
-    }
+    public void end(boolean interrupted){}
 
     @Override
     public boolean isFinished(){
-        return intakeSub.isAtSetpoint();
+        return true;
     }
 }
