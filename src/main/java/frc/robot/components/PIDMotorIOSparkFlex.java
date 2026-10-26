@@ -20,6 +20,10 @@ public class PIDMotorIOSparkFlex implements PIDMotorIO {
     private double encoderConversionFactor = 1;
     private double velocityConversionFactor = 1;
 
+    @Override public SparkFlex getSpark() {
+        return motor;
+    }
+
     public PIDMotorIOSparkFlex(CANPort busID, int ID, SparkFlexConfig config, double encoderConversionFactor, double velocityConversionFactor) {
         motor = new SparkFlex(busID, ID, SparkLowLevel.MotorType.kBrushless);
         this.encoderConversionFactor = encoderConversionFactor;

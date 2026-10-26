@@ -16,6 +16,10 @@ public class PIDMotor extends SubsystemBase {
     io.resetEncoder();
   }
 
+  public PIDMotorIO getIO() {
+    return io;
+  }
+
   @Override public void periodic() {
     io.updateInputs(inputs);
   }

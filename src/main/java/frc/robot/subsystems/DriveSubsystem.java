@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.Consumer;
+
 import org.littletonrobotics.junction.Logger;
 import org.wpilib.command2.SubsystemBase;
 import org.wpilib.driverstation.Alliance;
@@ -55,6 +57,7 @@ public class DriveSubsystem extends SubsystemBase {
     private double lastMatchLog = 0.0;
     private boolean lastTeleopEnabled = false;
     private boolean lastAutonomousEnabled = false;
+    private Consumer<Pose2d> poseResetListener = pose -> {};
 
     //No clue about these values - for Choreo
     private final PIDController xController = new PIDController(10.0, 0.0, 0.0);
@@ -253,6 +256,7 @@ public class DriveSubsystem extends SubsystemBase {
             getRotation2d(),
             getSwerveModulePositions(),
             pose);
+        poseResetListener.accept(pose);
     }
 
     public void resetOdometry(Pose2d pose) {
@@ -260,6 +264,21 @@ public class DriveSubsystem extends SubsystemBase {
             getRotation2d(),
             getSwerveModulePositions(),
             pose);
+        poseResetListener.accept(pose);
+    }
+
+    /** Notified on every odometry or pose reset; simulation uses it to place the simulated robot. */
+    public void setPoseResetListener(Consumer<Pose2d> listener) {
+        poseResetListener = listener;
+    }
+
+    /** FL, FR, BL, BR. */
+    public SwerveModule[] getModules() {
+        return new SwerveModule[] {frontLeft, frontRight, backLeft, backRight};
+    }
+
+    public Pigeon2 getGyro() {
+        return gyro;
     }
 
     public void updateOdometry(Pose2d pose) {

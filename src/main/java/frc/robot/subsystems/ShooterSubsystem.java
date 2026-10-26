@@ -33,6 +33,22 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterActive = false;
     }
 
+    public PIDMotor getFlywheelMotor() {
+        return flywheelMotor;
+    }
+
+    public PIDMotor getHoodMotor() {
+        return hoodMotor;
+    }
+
+    public PIDMotor getFeederMotor() {
+        return feederMotor;
+    }
+
+    public PIDMotor getIndexerMotor() {
+        return indexerMotor;
+    }
+
     public void setFlywheel(double speed) {
         flywheelMotor.setVelocity(speed, 0);
     }

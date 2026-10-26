@@ -55,9 +55,16 @@ wpi.java.runSimWithDebugJni = false
 // Set this to true to enable desktop support.
 def includeDesktopSupport = false
 
+// box3d-sim is published locally with `gradlew publishToMavenLocal` from the box3d-sim repo.
+repositories {
+    mavenLocal()
+}
+
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
 dependencies {
+    implementation 'box3dsim:box3d-sim:0.1.0-SNAPSHOT'
+
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
@@ -90,7 +97,9 @@ test {
 }
 
 // Simulation configuration (e.g. environment variables).
-wpi.sim.addGui().defaultEnabled = true
+// Sim mode: sim (interactive, real time, GUI), fast (headless lockstep, CI), replay (AdvantageKit log replay).
+def simMode = (project.findProperty('simMode') ?: 'sim').toString()
+wpi.sim.addGui().defaultEnabled = (simMode == 'sim')
 wpi.sim.addDriverstation()
 
 application.mainClass = ROBOT_MAIN_CLASS
@@ -98,6 +107,13 @@ application.mainClass = ROBOT_MAIN_CLASS
 deployArtifact.configureApplication(application)
 wpi.java.configureApplication(application)
 wpi.java.configureTestTasks(test)
+
+tasks.named('run') {
+    environment 'SIM_MODE', simMode
+    // Headless match options; passed through only when given.
+    ['simAuto': 'SIM_AUTO', 'simMatch': 'SIM_MATCH', 'simExpectMinScore': 'SIM_EXPECT_MIN_SCORE']
+        .each { prop, env -> if (project.hasProperty(prop)) environment env, project.property(prop).toString() }
+}
 
 jar {
     from('src') { into 'backup/src' }

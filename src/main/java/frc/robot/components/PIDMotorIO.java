@@ -2,6 +2,7 @@ package frc.robot.components;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkLowLevel;
 
 public interface PIDMotorIO {
@@ -40,4 +41,7 @@ public interface PIDMotorIO {
     default public double getOutputCurrent(){return 0;}
 
     default public double getMotorTemperature(){return 0;}
+
+    /** The underlying Spark, for simulation; null when there is none. */
+    default public SparkBase getSpark(){return null;}
 }

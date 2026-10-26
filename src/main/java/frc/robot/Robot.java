@@ -14,7 +14,14 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 
+import org.wpilib.simulation.SimHooks;
+
 import com.revrobotics.util.StatusLogger;
+
+import frc.robot.Constants.Operating;
+import frc.robot.Constants.Operating.Constants.SimMode;
+import frc.robot.sim.HeadlessMatchRunner;
+import frc.robot.sim.RobotSim;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -25,6 +32,9 @@ public class Robot extends LoggedRobot  {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
+
+  private RobotSim robotSim;
+  private HeadlessMatchRunner runner;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -38,7 +48,7 @@ public class Robot extends LoggedRobot  {
     if (isReal()) {
 		// FIXED PATH TO SYSCORE
 		Logger.addDataReceiver(new WPILOGWriter("/home/systemcore/logs")); 
-    } else {
+    } else if (Operating.Constants.simMode() == SimMode.REPLAY) {
       setUseTiming(false); // Run as fast as possible
       String logPath = null;
       try {
@@ -48,13 +58,17 @@ public class Robot extends LoggedRobot  {
         // swallow all exceptions, use if statement below
       }
       if (logPath != null && !logPath.isEmpty()) {
-        // Replay mode
         Logger.setReplaySource(new WPILOGReader(logPath));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
       } else {
-        // Fresh simulation
         Logger.addDataReceiver(new WPILOGWriter("logs"));
       }
+    } else {
+      // Interactive sim keeps real-time timing; FAST lockstep-steps HAL time in simulationPeriodic.
+      if (Operating.Constants.simMode() == SimMode.FAST) {
+        setUseTiming(false);
+      }
+      Logger.addDataReceiver(new WPILOGWriter("logs"));
     }
 
     Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
@@ -117,9 +131,31 @@ public class Robot extends LoggedRobot  {
 
   /** This function is called once when the robot is first started up. */
   @Override
-  public void simulationInit() {}
+  public void simulationInit() {
+    SimMode mode = Operating.Constants.simMode();
+    if (mode == SimMode.FAST) {
+      SimHooks.pauseTiming();
+    }
+    if (mode != SimMode.REPLAY) {
+      robotSim = new RobotSim(m_robotContainer, true);
+    }
+    if (mode == SimMode.FAST) {
+      runner = new HeadlessMatchRunner(robotSim, m_robotContainer);
+    }
+  }
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    if (robotSim != null) {
+      robotSim.periodic();
+    }
+    if (runner != null) {
+      runner.periodic();
+    }
+    if (Operating.Constants.simMode() == SimMode.FAST) {
+      // Lockstep: exactly one robot period of HAL time per loop.
+      SimHooks.stepTiming(0.02);
+    }
+  }
 }

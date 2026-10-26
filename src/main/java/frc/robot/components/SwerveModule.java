@@ -20,6 +20,10 @@ public class SwerveModule extends SubsystemBase {
     motorLocation = location;
   }
 
+  public SwerveModuleIO getIO() {
+    return io;
+  }
+
   @Override public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("SwerveModule/" + motorLocation.getFieldDescription(), inputs);

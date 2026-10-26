@@ -40,6 +40,14 @@ public class GroundIntakeSubsystem extends SubsystemBase {
         isIntakeDown = false;
     }
 
+    public PIDMotor getIntakeMotor() {
+        return intakeMotor;
+    }
+
+    public PIDMotor getDropMotor() {
+        return dropMotor;
+    }
+
     public void setIntake(double speed) {
         isRunning = (speed != 0);
         intakeMotor.set(speed);

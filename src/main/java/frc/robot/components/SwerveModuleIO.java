@@ -22,4 +22,11 @@ public interface SwerveModuleIO {
     default public void setDesiredVelocity(SwerveModuleVelocity velocity) {}
 
     default public void resetDriveEncoder() {}
+
+    /** Hardware access for simulation; null when there is none. */
+    default public PIDMotor getDriveMotor() { return null; }
+
+    default public PIDMotor getTurnMotor() { return null; }
+
+    default public double getChassisAngularOffset() { return 0; }
 }

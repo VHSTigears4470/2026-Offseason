@@ -53,4 +53,16 @@ public class SwerveModuleIONEO implements SwerveModuleIO {
   @Override public void resetDriveEncoder() {
     driveMotor.setEncoder(0);
   }
+
+  @Override public PIDMotor getDriveMotor() {
+    return driveMotor;
+  }
+
+  @Override public PIDMotor getTurnMotor() {
+    return turnMotor;
+  }
+
+  @Override public double getChassisAngularOffset() {
+    return chassisAngularOffset;
+  }
 }

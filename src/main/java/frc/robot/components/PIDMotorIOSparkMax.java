@@ -23,6 +23,10 @@ public class PIDMotorIOSparkMax implements PIDMotorIO {
     private double velocityConversionFactor = 1;
 
 
+    @Override public SparkMax getSpark() {
+        return motor;
+    }
+
     public PIDMotorIOSparkMax(CANPort busID, int ID, SparkMaxConfig config, double encoderConversionFactor, double velocityConversionFactor) {
         motor = new SparkMax(busID, ID, MotorType.kBrushless);
         this.encoderConversionFactor = encoderConversionFactor;
