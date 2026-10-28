@@ -21,6 +21,7 @@ import com.revrobotics.util.StatusLogger;
 import frc.robot.Constants.Operating;
 import frc.robot.Constants.Operating.Constants.SimMode;
 import frc.robot.sim.HeadlessMatchRunner;
+import frc.robot.sim.LogReenactor;
 import frc.robot.sim.RobotSim;
 
 /**
@@ -35,6 +36,7 @@ public class Robot extends LoggedRobot  {
 
   private RobotSim robotSim;
   private HeadlessMatchRunner runner;
+  private LogReenactor reenactor;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -63,6 +65,9 @@ public class Robot extends LoggedRobot  {
       } else {
         Logger.addDataReceiver(new WPILOGWriter("logs"));
       }
+    } else if (Operating.Constants.simMode() == SimMode.REENACT) {
+      setUseTiming(false);
+      Logger.addDataReceiver(new WPILOGWriter(LogReenactor.outputPath()));
     } else {
       // Interactive sim keeps real-time timing; FAST lockstep-steps HAL time in simulationPeriodic.
       if (Operating.Constants.simMode() == SimMode.FAST) {
@@ -133,14 +138,17 @@ public class Robot extends LoggedRobot  {
   @Override
   public void simulationInit() {
     SimMode mode = Operating.Constants.simMode();
-    if (mode == SimMode.FAST) {
+    if (mode.lockstep()) {
       SimHooks.pauseTiming();
     }
     if (mode != SimMode.REPLAY) {
-      robotSim = new RobotSim(m_robotContainer, true);
+      // A re-enacted log carries its own enables and disables.
+      robotSim = new RobotSim(m_robotContainer, mode != SimMode.REENACT);
     }
     if (mode == SimMode.FAST) {
       runner = new HeadlessMatchRunner(robotSim, m_robotContainer);
+    } else if (mode == SimMode.REENACT) {
+      reenactor = new LogReenactor(robotSim, m_robotContainer);
     }
   }
 
@@ -153,7 +161,10 @@ public class Robot extends LoggedRobot  {
     if (runner != null) {
       runner.periodic();
     }
-    if (Operating.Constants.simMode() == SimMode.FAST) {
+    if (reenactor != null) {
+      reenactor.periodic();
+    }
+    if (Operating.Constants.simMode().lockstep()) {
       // Lockstep: exactly one robot period of HAL time per loop.
       SimHooks.stepTiming(0.02);
     }

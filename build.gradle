@@ -97,7 +97,8 @@ test {
 }
 
 // Simulation configuration (e.g. environment variables).
-// Sim mode: sim (interactive, real time, GUI), fast (headless lockstep, CI), replay (AdvantageKit log replay).
+// Sim mode: sim (interactive, real time, GUI), fast (headless lockstep, CI), replay (AdvantageKit log replay),
+// reenact (headless lockstep: a log's driver station inputs drive the physics sim).
 def simMode = (project.findProperty('simMode') ?: 'sim').toString()
 wpi.sim.addGui().defaultEnabled = (simMode == 'sim')
 wpi.sim.addDriverstation()
@@ -110,8 +111,8 @@ wpi.java.configureTestTasks(test)
 
 tasks.named('run') {
     environment 'SIM_MODE', simMode
-    // Headless match options; passed through only when given.
-    ['simAuto': 'SIM_AUTO', 'simMatch': 'SIM_MATCH', 'simExpectMinScore': 'SIM_EXPECT_MIN_SCORE']
+    // Headless match and re-enact options; passed through only when given.
+    ['simAuto': 'SIM_AUTO', 'simMatch': 'SIM_MATCH', 'simExpectMinScore': 'SIM_EXPECT_MIN_SCORE', 'simLog': 'SIM_LOG']
         .each { prop, env -> if (project.hasProperty(prop)) environment env, project.property(prop).toString() }
 }
 

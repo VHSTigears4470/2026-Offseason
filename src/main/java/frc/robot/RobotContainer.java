@@ -119,7 +119,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
       // Headless sim runs pick the auto by name, since nobody can click the chooser.
       String simAuto = System.getenv("SIM_AUTO");
-      if (simAuto != null && !simAuto.isBlank() && Operating.Constants.simMode() == Operating.Constants.SimMode.FAST) {
+      if (simAuto != null && !simAuto.isBlank() && Operating.Constants.simMode().lockstep()) {
         return new PathPlannerAuto(simAuto.trim());
       }
       if (Operating.Constants.USING_AUTO) {

@@ -12,7 +12,17 @@ public class Operating {
         public static final boolean USING_LIMELIGHT = false;
         public static final boolean USING_AUTO = true;
 
-        public enum SimMode { SIM, FAST, REPLAY }
+        public enum SimMode {
+            SIM,
+            FAST,
+            REPLAY,
+            REENACT;
+
+            /** Headless, with HAL time stepped one loop at a time. */
+            public boolean lockstep() {
+                return this == FAST || this == REENACT;
+            }
+        }
 
         /** From the SIM_MODE environment variable (set by build.gradle); SIM when absent or unrecognized. */
         public static SimMode simMode() {
@@ -21,6 +31,7 @@ public class Operating {
             return switch (v.trim().toLowerCase()) {
                 case "fast" -> SimMode.FAST;
                 case "replay" -> SimMode.REPLAY;
+                case "reenact" -> SimMode.REENACT;
                 default -> SimMode.SIM;
             };
         }

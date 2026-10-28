@@ -85,6 +85,7 @@ public final class RobotSim {
     private MatchPhase lastPhase = MatchPhase.FREE_PLAY;
     private double teleopEnableAt = Double.NaN;
     private double stepMillis;
+    private boolean forceFreePlay;
 
     /**
      * @param actAsFms disable the robot when AUTO and TELEOP end and start TELEOP after AUTO, as FMS would. The sim GUI
@@ -186,6 +187,11 @@ public final class RobotSim {
         return intake.acquiredCount();
     }
 
+    /** Free play regardless of the /Tuning/Sim/FreePlay toggle. */
+    void setForceFreePlay(boolean on) {
+        forceFreePlay = on;
+    }
+
     /** Places the simulated robot and seeds the robot's odometry to match. */
     void placeRobot(Pose3 pose) {
         drive.teleport(pose.position().x(), pose.position().y(), pose.rotation().yaw());
@@ -249,7 +255,7 @@ public final class RobotSim {
             arena.reset();
         }
         prevAutoEnabled = autoEnabled;
-        match.setFreePlay(freePlayToggle.get());
+        match.setFreePlay(forceFreePlay || freePlayToggle.get());
         match.setDsState(new DsState(RobotState.isEnabled(), RobotState.isAutonomous(), RobotState.isTeleop()));
         boolean allowed = match.outputsAllowed();
         for (SparkBinding b : all) {
@@ -273,6 +279,12 @@ public final class RobotSim {
         RoboRioSim.setVInVoltage(vbus);
         pigeon.setSupplyVoltage(vbus);
         pigeon.setRawYaw(Math.toDegrees(drive.gyro().yawRad()));
+        Rotation3d tilt = PoseConversions.toPose3d(drive.pose()).getRotation();
+        pigeon.setPitch(Math.toDegrees(tilt.getY()));
+        pigeon.setRoll(Math.toDegrees(tilt.getX()));
+        box3dsim.math.Vec3 omega = drive.pose().rotation().inverse().rotate(drive.angularVelocity());
+        pigeon.setAngularVelocityX(Math.toDegrees(omega.x()));
+        pigeon.setAngularVelocityY(Math.toDegrees(omega.y()));
         pigeon.setAngularVelocityZ(Math.toDegrees(drive.gyro().yawRateRadPerSec()));
 
         handleTuningToggles();
@@ -417,11 +429,17 @@ public final class RobotSim {
         Logger.recordOutput("FieldSimulation/Robot/Hopper", storage.hopperCount());
         Logger.recordOutput("FieldSimulation/Robot/Staged", storage.staged());
         Logger.recordOutput("FieldSimulation/Robot/ShotsFired", shooter.shotsFired());
+        Logger.recordOutput("FieldSimulation/Robot/ExitBlocked", shooter.exitBlocked());
         Logger.recordOutput("FieldSimulation/Robot/IntakeAcquired", intake.acquiredCount());
         Logger.recordOutput("FieldSimulation/Robot/IntakeDeployProgress", intake.deployProgress());
         // Negated to match the robot's own Shooter/Actual RPM, which logs -flywheelMotor.getVelocity().
         Logger.recordOutput("FieldSimulation/Robot/FlywheelRPM", -shooter.flywheel().velocity() * RAD_PER_SEC_TO_RPM);
         Logger.recordOutput("FieldSimulation/Robot/LaunchPitchDeg", Math.toDegrees(hoodPitch));
+        double[] loads = new double[drive.moduleCount()];
+        for (int i = 0; i < loads.length; i++) {
+            loads[i] = drive.normalLoad(i);
+        }
+        Logger.recordOutput("FieldSimulation/Drive/NormalLoadsN", loads);
 
         Logger.recordOutput("FieldSimulation/Battery/Volts", arena.battery().voltage());
         Logger.recordOutput("FieldSimulation/Battery/Amps", arena.battery().filteredCurrent());

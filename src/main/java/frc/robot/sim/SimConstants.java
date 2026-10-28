@@ -5,6 +5,7 @@ import java.util.List;
 
 import box3dsim.arena.Alliance;
 import box3dsim.drive.GyroConfig;
+import box3dsim.drive.SuspensionConfig;
 import box3dsim.drive.SwerveDriveConfig;
 import box3dsim.drive.SwerveModuleConfig;
 import box3dsim.drive.TireConfig;
@@ -57,7 +58,17 @@ final class SimConstants {
         // Mass and MOI from PathPlanner settings.json. Robot height 0.55 m: the raced robot was filed down to fit the
         // 0.565 m TRENCH clearance. ASSUMPTION: cg height.
         return new SwerveDriveConfig(modules, 50, 6.883, 0.20, 2 * BUMPER_HALF_LENGTH, 2 * BUMPER_HALF_WIDTH,
-                0.0635, 0.0825, 0.08, 0.55, TireConfig.defaults(), GyroConfig.pigeon2(), true);
+                0.0635, 0.0825, 0.08, 0.55, TireConfig.defaults(), GyroConfig.pigeon2(), true)
+                .withSuspension(suspension());
+    }
+
+    /** ASSUMPTION: frame bottom 1 in above the carpet, a MAXSwerve chassis on 3 in wheels. */
+    static final double GROUND_CLEARANCE = 0.0254;
+
+    static SuspensionConfig suspension() {
+        // ASSUMPTION: 1.75 mm static deflection per module (tread and frame flex), damping ratio about 0.5. Roll and
+        // pitch MOI of a uniform 0.9 × 0.9 × 0.55 m box.
+        return new SuspensionConfig(70_000, 1_000, GROUND_CLEARANCE, 4.6, 4.6);
     }
 
     static ShooterConfig shooter() {
