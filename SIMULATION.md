@@ -22,11 +22,37 @@ library.
 | `.\gradlew.bat run -PsimMode=fast -PsimAuto="Shoot at Hub"` | headless lockstep: plays the auto and exits 0/1 with `build/sim-results.json` |
 | `.\gradlew.bat run -PsimMode=fast -PsimMatch=full` | headless full match: auto, then teleop with a few human-player throws and an intake check (back bumper against the neutral zone, roller intaking). It checks that the sim disabled and enabled the robot like FMS, and that a second auto starts on a freshly reset field |
 | `.\gradlew.bat run -PsimMode=replay` | AdvantageKit log replay |
+| `.\gradlew.bat run -PsimMode=reenact -PsimLog=<.wpilog> -PsimAuto="Shoot at Hub"` | headless re-enactment: the log's driver drives the physics sim (below) |
 
 `pwsh scripts/sim-ci.ps1` publishes the library and runs both headless cases.
 
-In fast mode the console shows "Watchdog not fed" warnings, because HAL time is stepped inside the loop. They are
-expected.
+In fast and reenact modes the console shows "Watchdog not fed" warnings, because HAL time is stepped inside the
+loop. They are expected.
+
+## Re-enacting a match log
+
+Replay mode reruns the robot code on the inputs a log recorded, so nothing is simulated. Reenact mode feeds only
+the log's driver station into the sim: enable and mode, alliance, match time, game data and every joystick. The robot
+code then drives the physics sim the way the real driver did.
+
+- **Auto:** the auto chooser isn't logged, so name the auto with `-PsimAuto`. Without it, AUTO runs `None`.
+- **Run window:** the run starts 2 s before the first enable and ends 1 s after the last disable. A log cut short
+  by a power-off is read up to its last complete record.
+- **Start pose:** the robot starts at the logged `Drive/Pose` when that is on the field. Without vision, match
+  odometry starts at (0, 0); then the robot starts at the alliance start pose and logged poses are compared
+  relative to where they started. A logged pose jump (an odometry reset) re-anchors the comparison.
+  `Reenact/LoggedPoseRaw` is the pose as logged.
+- **Match clock:** a log with FMS attached runs the match clock, and FMS game data picks the first inactive HUB. A
+  practice log runs in free play, so the sim never cuts outputs.
+- **Output:** `logs/<name>_reenact.wpilog`. In AdvantageScope, put `RealOutputs/Reenact/LoggedPose` in as a ghost
+  next to `FieldSimulation/RobotPose`. `Reenact/PoseErrorM` is the distance from the sim's `Drive/Pose`.
+- **Results:** `build/reenact-results.json` has the RMS, max, final and AUTO-end pose error, and the sim/log path
+  length ratio.
+
+Open-loop drift limits how far a re-enactment tracks. Small differences change where the robot is when the driver's
+next input arrives, and nothing corrects them. Read the error over the first stretch after each enable, not as a
+whole-match score. The logged pose is the real robot's odometry, so its own drift (wheel slip, a wrong gear ratio)
+shows up as error too.
 
 ## Playing a match solo
 
@@ -132,13 +158,29 @@ Values still marked ASSUMPTION in `src/main/java/frc/robot/sim/SimConstants.java
 
 - hopper capacity (40);
 - intake pivot gearing;
-- cg height.
+- cg height;
+- frame ground clearance (1 in), module stiffness and damping, roll and pitch MOI.
+
+## Driving over BUMPs
+
+The chassis is free in six degrees of freedom. Each wheel finds the carpet, a BUMP or a DEPOT strip by ray casts,
+and its normal load comes from a stiff spring. So the robot pitches about 16° up and down a BUMP, and load shifts
+under acceleration. The Pigeon reports pitch and roll.
+
+- **Speed:** a BUMP crossing is slower than the TRENCH.
+- **High-centering:** with 1 in of clearance the frame slides on the ridge for about 0.25 s. All four wheels are off
+  the ground then, so they spin up and odometry over-reads. A slow crawl high-centers and stays stuck.
+- **Load sensors:** `FieldSimulation/Drive/NormalLoadsN` shows each wheel's load.
+
+**Shooting under the TRENCH:** the robot top is 1.7 cm below the arm, so the shooter can't fire there. The FUEL stays
+staged until the robot drives out, and `FieldSimulation/Robot/ExitBlocked` is true meanwhile.
 
 After changing shooter values, rerun box3d-sim's `ShotCalibrationTest` (its constants mirror `SimConstants`).
 
-## Known v0 limitations
+## Known limitations
 
-- The robot is locked flat. BUMPs don't affect robots, while FUEL rolls over them.
+- Wheels are rays on a stiff spring, with no tread compliance and no droop.
 - The intake has no physical roller collider, and storage is counted rather than simulated.
 - The HUB is a square bin with spawn-point exits. No opponents, no climbing, no vision.
 - REV sim adds unseeded velocity noise, so runs aren't bit-for-bit repeatable.
+- Re-enactment is open loop: the simulated robot is never re-synced to the logged pose.
